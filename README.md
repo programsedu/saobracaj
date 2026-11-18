@@ -8,6 +8,7 @@ Web aplikacija za crtanje raskrsnica (pogled odozgo) za nastavu saobraćaja – 
 - Manevri (levo, pravo, desno, polukružno), strelice putanje, migavci, rotaciona svetla
 - Regulisanje: STOP, ustupanje prvenstva, semafori, put sa prvenstvom prolaza (i kada glavni put skreće, sa dopunskom tablom IV-23)
 - Ostali srpski znakovi za raskrsnice (I-26, I-27, I-28, I-20, I-14, III-6, II-26, II-26.1, II-27, II-43)
+- **Moj predlog** – učenik klikće učesnike redom kojim misli da prolaze, a „Proveri” poredi predlog sa rešenjem programa i objašnjava greške
 - **Rešenje** – automatski redosled prolaska sa obrazloženjem za svakog učesnika
 - Poništi/ponovi, kopiranje i preuzimanje slike (PNG/SVG), deljenje dijagrama linkom
 

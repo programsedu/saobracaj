@@ -82,6 +82,19 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;
 .sol h5{margin:14px 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .sol .disc{font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;margin-top:12px}
 .sol .warn{color:#b04a00}
+.propbtn{background:#fff;color:#b35900;border:1px solid #e0a060;padding:8px 12px;font-size:12px}
+.propbtn.on{background:#b35900;color:#fff;border-color:#b35900}
+.sol .chips{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.sol .chiprow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sol .chip{background:#fbe9d7;border:1px solid #e0a060;border-radius:999px;padding:2px 9px;font-weight:700;cursor:pointer}
+.sol .chip:hover{background:#f6d2ad}
+.sol .num.o{background:#b35900}
+.sol .acts{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.sol label.same{display:flex;gap:6px;align-items:center;font-size:12px;margin:6px 0;cursor:pointer}
+.sol .res{border-radius:10px;padding:9px 11px;margin-top:10px}
+.sol .res.good{background:#e6f4ea;color:#185c2c}
+.sol .res.badr{background:#fdecea;color:#8a2318}
+.sol .res ul{margin:6px 0 0;padding-left:18px}
 @media (max-width:700px){.hint{display:none}.brand span{display:none}}
 </style>
 </head>
@@ -105,6 +118,7 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;
     </select>
     <select id="prioDir" hidden></select>
   </div>
+  <button class="btn propbtn" id="propBtn" data-t="propose"></button>
   <button class="btn solbtn" id="solBtn" data-t="solve"></button>
   <div class="icons">
     <button class="ib" id="undo" data-tt="undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
@@ -126,6 +140,7 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;
 </header>
 <main>
   <div id="stage"><svg id="board" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <div class="sol" id="propPanel" hidden><div class="head"><b data-t="propTitle"></b><button class="ib" id="propClose" aria-label="close">✕</button></div><div id="propBody"></div></div>
   <div class="sol" id="solPanel" hidden><div class="head"><b data-t="solTitle"></b><button class="ib" id="solClose" aria-label="close">✕</button></div><div id="solBody"></div></div>
 </main>
 <footer>
@@ -326,6 +341,44 @@ const I18N3={
   disc:"Soluția este calculată automat după regulile generale și presupune că toți participanții sosesc în același timp. Verific-o înainte de a o folosi la oră."}
 };
 for(const l in I18N3) Object.assign(I18N[l],I18N3[l]);
+const I18N4={
+ sr:{propose:"✎ Moj predlog",propTitle:"Tvoj predlog redosleda",
+  propHelp:"Klikni na učesnike na slici redom kojim, po tebi, prolaze kroz raskrsnicu. Učesnike koji sada ne prolaze (npr. imaju crveno svetlo) ne klikći. Ponovni klik uklanja učesnika iz predloga.",
+  sameStep:"Sledeći klik – istovremeno sa prethodnim",check:"Proveri",clearProp:"Obriši predlog",showSol:"Prikaži rešenje programa",emptyProp:"Još nisi izabrao nijednog učesnika.",
+  pOk:"Tačno! Redosled je ispravan.",okAlt:"Napomena: {g} mogu da prođu i istovremeno.",bad:"Ima grešaka: {n}.",
+  e_order:"{a} ne može da prođe pre {b} niti istovremeno sa njim: {r}.",e_missing:"{a} nije u tvom predlogu, a prolazi kroz raskrsnicu.",
+  e_wait:"{a} sada ne prolazi – {r}",e_excl:"{a} nije deo zadatka ({r}).",
+  deadNote:"U ovoj situaciji postoji zatvoren krug – program je izabrao jedan mogući redosled, a i drugačiji izbor ko kreće prvi može biti prihvatljiv.",changed:"Dijagram je promenjen – klikni ponovo na Proveri."},
+ en:{propose:"✎ My answer",propTitle:"Your proposed order",
+  propHelp:"Click the road users in the picture in the order you think they pass through the intersection. Don't click road users who don't go now (e.g. they have a red light). Clicking again removes a road user from your answer.",
+  sameStep:"Next click – at the same time as the previous one",check:"Check",clearProp:"Clear answer",showSol:"Show the program's solution",emptyProp:"You haven't picked any road users yet.",
+  pOk:"Correct! The order is right.",okAlt:"Note: {g} may also go at the same time.",bad:"Mistakes: {n}.",
+  e_order:"{a} cannot go before {b} or at the same time: {r}.",e_missing:"{a} is missing from your answer, but it goes through the intersection.",
+  e_wait:"{a} does not go now – {r}",e_excl:"{a} is not part of the task ({r}).",
+  deadNote:"This situation contains a deadlock – the program chose one possible order, and a different choice of who goes first may also be acceptable.",changed:"The diagram has changed – click Check again."},
+ mk:{propose:"✎ Мој предлог",propTitle:"Твојот предлог за редоследот",
+  propHelp:"Кликни на учесниците на сликата по редоследот по кој, според тебе, минуваат низ раскрсницата. Учесниците што сега не минуваат (на пр. имаат црвено светло) не ги кликај. Повторниот клик го отстранува учесникот од предлогот.",
+  sameStep:"Следниот клик – истовремено со претходниот",check:"Провери",clearProp:"Избриши го предлогот",showSol:"Прикажи го решението на програмата",emptyProp:"Сè уште не си избрал ниту еден учесник.",
+  pOk:"Точно! Редоследот е правилен.",okAlt:"Забелешка: {g} можат да минат и истовремено.",bad:"Има грешки: {n}.",
+  e_order:"{a} не може да мине пред {b} ниту истовремено со него: {r}.",e_missing:"{a} не е во твојот предлог, а минува низ раскрсницата.",
+  e_wait:"{a} сега не минува – {r}",e_excl:"{a} не е дел од задачата ({r}).",
+  deadNote:"Во оваа ситуација има затворен круг – програмата избра еден можен редослед, а и поинаков избор кој тргнува прв може да биде прифатлив.",changed:"Дијаграмот е променет – кликни повторно на Провери."},
+ bg:{propose:"✎ Моят отговор",propTitle:"Твоят предложен ред",
+  propHelp:"Щракни върху участниците на картинката в реда, в който според теб минават през кръстовището. Не щраквай участниците, които сега не минават (напр. имат червена светлина). Повторно щракване премахва участника от отговора.",
+  sameStep:"Следващото щракване – едновременно с предишния",check:"Провери",clearProp:"Изчисти отговора",showSol:"Покажи решението на програмата",emptyProp:"Все още не си избрал нито един участник.",
+  pOk:"Вярно! Редът е правилен.",okAlt:"Бележка: {g} могат да минат и едновременно.",bad:"Грешки: {n}.",
+  e_order:"{a} не може да мине преди {b}, нито едновременно с него: {r}.",e_missing:"{a} липсва в отговора ти, а минава през кръстовището.",
+  e_wait:"{a} сега не минава – {r}",e_excl:"{a} не участва в задачата ({r}).",
+  deadNote:"В тази ситуация има затворен кръг – програмата избра един възможен ред, а и друг избор кой тръгва първи може да е приемлив.",changed:"Диаграмата е променена – щракни отново Провери."},
+ ro:{propose:"✎ Răspunsul meu",propTitle:"Ordinea propusă de tine",
+  propHelp:"Dă clic pe participanții din imagine în ordinea în care crezi că trec prin intersecție. Nu da clic pe cei care nu trec acum (de ex. au roșu). Un nou clic scoate participantul din răspuns.",
+  sameStep:"Următorul clic – în același timp cu precedentul",check:"Verifică",clearProp:"Șterge răspunsul",showSol:"Arată soluția programului",emptyProp:"Încă n-ai ales niciun participant.",
+  pOk:"Corect! Ordinea este bună.",okAlt:"Observație: {g} pot trece și în același timp.",bad:"Greșeli: {n}.",
+  e_order:"{a} nu poate trece înaintea lui {b} și nici în același timp cu el: {r}.",e_missing:"{a} lipsește din răspunsul tău, dar trece prin intersecție.",
+  e_wait:"{a} nu trece acum – {r}",e_excl:"{a} nu face parte din exercițiu ({r}).",
+  deadNote:"În această situație există un blocaj – programul a ales o ordine posibilă, iar o altă alegere a celui care pornește primul poate fi și ea acceptabilă.",changed:"Diagrama s-a schimbat – apasă din nou Verifică."}
+};
+for(const l in I18N4) Object.assign(I18N[l],I18N4[l]);
 I18N.en.helpText+=" In Controls, “Priority road” lets you choose the main road – it can also turn at the intersection, and the supplementary panel then shows its direction.";
 I18N.sr.helpText+=" U Regulisanju opcija „Put sa prvenstvom prolaza” omogućava da izabereš glavni put – on može i da skreće u raskrsnici, a dopunska tabla tada prikazuje njegov pravac.";
 I18N.mk.helpText+=" Во Регулирање, опцијата „Пат со првенство на минување“ ти овозможува да го избереш главниот пат – тој може и да свртува во раскрсницата, а дополнителната табла тогаш го покажува неговиот правец.";
@@ -615,6 +668,17 @@ function renderSVG(exp){
       s+=`<g transform="translate(${w.x.toFixed(1)} ${w.y.toFixed(1)})" pointer-events="none"><circle r="11" fill="#fff" stroke="#1f2a30" stroke-width="2"/><text y="4.3" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="${txt.length>1?10:12.5}" fill="#1f2a30">${txt}</text></g>`;
     });
   }
+  if(propOpen && !exp){
+    const us={}; prop.steps.forEach((w,i)=>w.forEach(id=>us[id]=i+1));
+    items.forEach(it=>{
+      const n=us[it.id]; if(!n) return;
+      const p=itemLocal(it); let lx=p.x, ly=p.y;
+      if(it.kind==='ped') ly+=20; else ly += (it.side==='in'?-1:1)*(KINDS[it.kind].hl+13);
+      const w=toWorld(it.arm,lx,ly), st=prop.res && prop.res.status[it.id];
+      const col= st==='bad' ? '#c0392b' : st==='good' ? '#1e8e3e' : '#b35900';
+      s+=`<g transform="translate(${w.x.toFixed(1)} ${w.y.toFixed(1)})" pointer-events="none"><circle r="11.5" fill="${col}" stroke="#fff" stroke-width="2"/><text y="4.6" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="12.5" fill="#fff">${n}</text></g>`;
+    });
+  }
   if(solOpen && !exp && sol && sol.stepOf){
     items.forEach(it=>{
       const n=sol.stepOf[it.id]; if(!n) return;
@@ -637,6 +701,7 @@ function render(){
   if(solOpen) sol=solve();
   board.innerHTML=renderSVG(false);
   if(solOpen) renderSolution();
+  if(propOpen) renderProp();
   document.getElementById('undo').disabled=!undoStack.length;
   document.getElementById('redo').disabled=!redoStack.length;
   document.querySelectorAll('#layoutSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.layout));
@@ -694,6 +759,7 @@ board.addEventListener('pointerdown',e=>{
   if(itEl){
     e.preventDefault();
     const id=+itEl.dataset.id;
+    if(propOpen){ propClick(id); return; }
     drag={type:'move',id,sx:e.clientX,sy:e.clientY,moved:false,before:JSON.stringify(S)};
   } else if(slEl){
     selected={type:'slot',arm:slEl.dataset.slot}; closeMenus(); render();
@@ -929,8 +995,8 @@ async function copyImage(){
 }
 
 // ===================== solver =====================
-let solOpen=false, sol=null;
-function effLabels(exp){ return (solOpen && !exp) ? 'let' : S.labels; }
+let solOpen=false, sol=null, propOpen=false, prop={steps:[],same:false,res:null,sig:''};
+function effLabels(exp){ return ((solOpen||propOpen) && !exp) ? 'let' : S.labels; }
 const armLight=a=>{ const c=S.ctl[a]; return c && c.t==='light' ? c.c : null; };
 const isEm=v=>EMERGENCY.has(v.kind) && v.lights;
 const relDeg=(A,B)=>(ARM_DEG[B.arm]-ARM_DEG[A.arm]+360)%360;
@@ -1095,7 +1161,63 @@ function renderSolution(){
   h+=`<div class="disc">${t('disc')}</div>`;
   body.innerHTML=h;
 }
+function propClick(id){
+  const i=prop.steps.findIndex(w=>w.includes(id));
+  if(i>=0){ prop.steps[i]=prop.steps[i].filter(x=>x!==id); if(!prop.steps[i].length) prop.steps.splice(i,1); }
+  else if(prop.same && prop.steps.length){ prop.steps[prop.steps.length-1].push(id); prop.same=false; }
+  else { prop.steps.push([id]); prop.same=false; }
+  prop.res=null; render();
+}
+function checkProp(){
+  const R=solve(), us={}; prop.steps.forEach((w,i)=>w.forEach(id=>us[id]=i+1));
+  const errs=[], status={}, L=id=>R.lab[id];
+  const byId={}; S.items.forEach(it=>byId[it.id]=it);
+  Object.keys(us).forEach(id=>status[id]='good');
+  for(const v of R.waiting) if(us[v.id]){ const l=armLight(v.arm); errs.push(t('e_wait').replace('{a}',L(v.id)).replace('{r}', v.kind==='ped'?t('n_pedRed'): l==='y'?t('n_amber'):t('n_red'))); status[v.id]='bad'; }
+  for(const [v,k] of R.excluded) if(us[v.id]){ errs.push(t('e_excl').replace('{a}',L(v.id)).replace('{r}',t(k))); status[v.id]='bad'; }
+  const active=R.steps.flat();
+  for(const v of active) if(!us[v.id]) errs.push(t('e_missing').replace('{a}',L(v.id)));
+  for(const A of active) for(const p of R.pred[A.id]){
+    if(p.ignored || !us[A.id] || !us[p.b.id]) continue;
+    if(us[A.id]<=us[p.b.id]){ const r=t(p.r).replace('{b}',L(p.b.id)); errs.push(t('e_order').replace('{a}',L(A.id)).replace(/\{b\}/g,L(p.b.id)).replace('{r}',r)); status[A.id]='bad'; }
+  }
+  const groups=R.steps.filter(w=>w.length>1).map(w=>w.map(v=>L(v.id)).join(' + '));
+  const alt = !errs.length && prop.steps.length>R.steps.length && groups.length ? t('okAlt').replace('{g}',groups.join(', ')) : '';
+  prop.res={errs,status,alt,dead:Object.keys(R.dead).length>0}; prop.sig=encode();
+  render();
+}
+function renderProp(){
+  const body=document.getElementById('propBody'); if(!body) return;
+  const all=S.items.filter(it=>arms().includes(it.arm)); const lab={}; all.forEach((it,i)=>lab[it.id]=labelText(i,'let'));
+  prop.steps=prop.steps.map(w=>w.filter(id=>lab[id])).filter(w=>w.length);
+  let h=`<div class="reg">${t('propHelp')}</div>`;
+  if(!all.length){ body.innerHTML=h+`<p>${t('noUsers')}</p>`; return; }
+  h+=`<label class="same"><input type="checkbox" id="propSame" ${prop.same?'checked':''}> ${t('sameStep')}</label>`;
+  if(!prop.steps.length) h+=`<p style="color:var(--muted)">${t('emptyProp')}</p>`;
+  else h+=`<div class="chips">${prop.steps.map((w,i)=>`<div class="chiprow"><div class="num o">${i+1}</div>${w.map(id=>`<span class="chip" data-rm="${id}">${lab[id]} ✕</span>`).join('<span>+</span>')}</div>`).join('')}</div>`;
+  h+=`<div class="acts"><button class="btn on" id="propCheck" ${prop.steps.length?'':'disabled'}>${t('check')}</button><button class="btn" id="propClear">${t('clearProp')}</button></div>`;
+  if(prop.res){
+    if(prop.sig!==encode()) h+=`<div class="res badr">${t('changed')}</div>`;
+    else if(!prop.res.errs.length) h+=`<div class="res good"><b>${t('pOk')}</b>${prop.res.alt?`<div style="margin-top:4px">${prop.res.alt}</div>`:''}</div>`;
+    else h+=`<div class="res badr"><b>${t('bad').replace('{n}',prop.res.errs.length)}</b><ul>${prop.res.errs.map(e=>`<li>${e}</li>`).join('')}</ul></div>`;
+    if(prop.res.dead) h+=`<p style="font-size:12px;color:var(--muted)">${t('deadNote')}</p>`;
+    h+=`<div class="acts"><button class="btn" id="propShowSol">${t('showSol')}</button></div>`;
+  }
+  body.innerHTML=h;
+  document.getElementById('propSame').onchange=e=>{ prop.same=e.target.checked; };
+  body.querySelectorAll('[data-rm]').forEach(el=>el.onclick=()=>propClick(+el.dataset.rm));
+  document.getElementById('propCheck').onclick=checkProp;
+  document.getElementById('propClear').onclick=()=>{ prop.steps=[]; prop.res=null; prop.same=false; render(); };
+  const sb=document.getElementById('propShowSol'); if(sb) sb.onclick=()=>setSol(true);
+}
+function setProp(open){
+  propOpen=open; document.getElementById('propPanel').hidden=!open;
+  document.getElementById('propBtn').classList.toggle('on',open);
+  if(open){ selected=null; if(solOpen){ solOpen=false; document.getElementById('solPanel').hidden=true; document.getElementById('solBtn').classList.remove('on'); } }
+  render();
+}
 function setSol(open){
+  if(open && propOpen){ propOpen=false; document.getElementById('propPanel').hidden=true; document.getElementById('propBtn').classList.remove('on'); }
   solOpen=open; document.getElementById('solPanel').hidden=!open;
   document.getElementById('solBtn').classList.toggle('on',open);
   if(open){ selected=null; }
@@ -1123,6 +1245,8 @@ document.getElementById('lang').addEventListener('change',e=>{ lang=e.target.val
 document.getElementById('undo').onclick=undo;
 document.getElementById('solBtn').onclick=()=>setSol(!solOpen);
 document.getElementById('solClose').onclick=()=>setSol(false);
+document.getElementById('propBtn').onclick=()=>setProp(!propOpen);
+document.getElementById('propClose').onclick=()=>setProp(false);
 document.getElementById('redo').onclick=redo;
 document.getElementById('clear').onclick=()=>{ if(!S.items.length && S.preset==='none') return; snapshot(); const keep={layout:S.layout,markings:S.markings,labels:S.labels}; S=Object.assign(freshState(),keep); selected=null; commit(); };
 document.getElementById('copy').onclick=copyImage;
