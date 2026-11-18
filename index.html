@@ -10,7 +10,9 @@
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 body{display:flex;flex-direction:column;min-height:100vh}
 header,footer{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:8px 14px;flex-wrap:wrap}
-footer{border-top:1px solid var(--line);border-bottom:none}
+footer{border-top:1px solid var(--line);border-bottom:none;flex-wrap:nowrap;gap:12px;overflow-x:auto}
+footer .grp{flex:none}
+footer .sepv{width:1px;height:24px;background:var(--line);flex:none}
 .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;margin-right:auto;white-space:nowrap}
 .lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .grp{display:flex;align-items:center;gap:8px}
@@ -38,7 +40,7 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;p
 .part{width:46px;height:30px;border:0;background:none;border-radius:8px;cursor:grab;display:grid;place-items:center}
 .part:hover{background:#eef3f3}
 .part svg{width:44px;height:26px;pointer-events:none}
-.hint{color:var(--muted);font-size:13px;margin-right:auto}
+.hint{color:var(--muted);font-size:13px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .help{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;font-weight:700;color:var(--muted);cursor:pointer}
 .pop{max-height:calc(100% - 8px);overflow:auto;max-width:310px;position:absolute;z-index:20;background:#fff;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:12px;min-width:220px;font-size:12px}
 .pop h4{margin:0 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
@@ -154,7 +156,7 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;p
   <button class="help" id="helpBtn">?</button>
   <span class="lbl" data-t="parts"></span>
   <div class="palette" id="palette"></div>
-  <span class="hint" id="hint" data-t="hint"></span>
+  <div class="sepv"></div>
   <div class="grp"><span class="lbl" data-t="zoom"></span><div class="zoom"><button id="zoomOut" aria-label="−">−</button><span id="zoomVal"></span><button id="zoomIn" aria-label="+">+</button></div></div>
   <div class="grp"><span class="lbl" data-t="markings"></span>
     <select id="markings"><option value="eu" data-t="eu"></option><option value="us" data-t="us"></option></select>
@@ -162,6 +164,7 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;p
   <div class="grp"><span class="lbl" data-t="labels"></span>
     <select id="labels"><option value="none" data-t="none"></option><option value="num" data-t="numbers"></option><option value="let" data-t="letters"></option></select>
   </div>
+  <span class="hint" id="hint" data-t="hint"></span>
 </footer>
 <div class="toast" id="toast"></div>
 <div class="modal" id="helpModal"><div class="box"><h3 data-t="helpTitle"></h3><p data-t="helpText"></p><button class="btn on" data-close data-t="ok"></button></div></div>
