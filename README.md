@@ -10,6 +10,7 @@ Web aplikacija za crtanje raskrsnica (pogled odozgo) za nastavu saobraćaja – 
 - Ostali srpski znakovi za raskrsnice (I-26, I-27, I-28, I-20, I-14, I-30, III-6, II-26, II-26.1, II-27, II-43, II-45.2)
 - **Moj predlog** – učenik klikće učesnike redom kojim misli da prolaze, a „Proveri” poredi predlog sa rešenjem programa i objašnjava greške
 - **Rešenje** – automatski redosled prolaska sa obrazloženjem za svakog učesnika
+- Uvećanje prikaza (100–180 %, dugmad − / + ili Ctrl + točkić miša); polje za crtanje zauzima ceo raspoloživi prostor ekrana
 - Poništi/ponovi, kopiranje i preuzimanje slike (PNG/SVG), deljenje dijagrama linkom
 
 ## Pokretanje

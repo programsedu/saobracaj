@@ -25,8 +25,13 @@ select.lang{text-transform:none}
 .ib:disabled{opacity:.35;cursor:default}
 .ib svg{width:18px;height:18px}
 .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
-main{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;position:relative;overflow:hidden}
-#stage{position:relative;width:min(100%,calc((100vh - 150px)*4/3),1100px);aspect-ratio:4/3}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;position:relative;overflow:hidden;min-height:0}
+#stage{position:relative;width:min(100%,calc((100vh - 150px)*4/3));aspect-ratio:4/3}
+#board{overflow:hidden}
+.zoom{display:flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:8px;padding:1px}
+.zoom button{border:0;background:none;width:28px;height:28px;font-size:17px;font-weight:700;color:var(--teal);cursor:pointer;border-radius:6px}
+.zoom button:hover{background:#eef3f3}
+.zoom span{min-width:44px;text-align:center;font-size:12px;font-weight:700;color:var(--muted)}
 #board{width:100%;height:100%;display:block;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);touch-action:none;user-select:none}
 #board [data-id],#board [data-slot]{cursor:pointer}
 .palette{display:flex;gap:6px;align-items:center;touch-action:none}
@@ -150,6 +155,7 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;
   <span class="lbl" data-t="parts"></span>
   <div class="palette" id="palette"></div>
   <span class="hint" id="hint" data-t="hint"></span>
+  <div class="grp"><span class="lbl" data-t="zoom"></span><div class="zoom"><button id="zoomOut" aria-label="−">−</button><span id="zoomVal"></span><button id="zoomIn" aria-label="+">+</button></div></div>
   <div class="grp"><span class="lbl" data-t="markings"></span>
     <select id="markings"><option value="eu" data-t="eu"></option><option value="us" data-t="us"></option></select>
   </div>
@@ -381,6 +387,7 @@ const I18N4={
   deadNote:"În această situație există un blocaj – programul a ales o ordine posibilă, iar o altă alegere a celui care pornește primul poate fi și ea acceptabilă.",changed:"Diagrama s-a schimbat – apasă din nou Verifică."}
 };
 for(const l in I18N4) Object.assign(I18N[l],I18N4[l]);
+const I18N6={sr:{zoom:"Uvećanje"},en:{zoom:"Zoom"},mk:{zoom:"Зголемување"},bg:{zoom:"Мащаб"},ro:{zoom:"Mărire"}};
 const I18N5={
  sr:{ringLayout:"Kružni tok",lanes2:"2 trake",lanes3:"3 trake",ringPreset:"Kružni tok (ustupi na ulazu)",inRing:"u kružnom toku",
   lane0:"spoljna traka",lane1:"srednja traka",lane1b:"unutrašnja traka",lane2:"unutrašnja traka",ex1:"1. izlaz",ex2:"2. izlaz",ex3:"3. izlaz",ex4:"4. izlaz (polukružno)",
@@ -434,6 +441,7 @@ const I18N5={
   reg_ringNone:"Sens giratoriu fără indicatoare: se aplică prioritatea de dreapta, deci vehiculele care intră au prioritate față de cele din giratoriu."}
 };
 for(const l in I18N5) Object.assign(I18N[l],I18N5[l]);
+for(const l in I18N6) Object.assign(I18N[l],I18N6[l]);
 I18N.en.helpText+=" In Controls, “Priority road” lets you choose the main road – it can also turn at the intersection, and the supplementary panel then shows its direction.";
 I18N.sr.helpText+=" U Regulisanju opcija „Put sa prvenstvom prolaza” omogućava da izabereš glavni put – on može i da skreće u raskrsnici, a dopunska tabla tada prikazuje njegov pravac.";
 I18N.mk.helpText+=" Во Регулирање, опцијата „Пат со првенство на минување“ ти овозможува да го избереш главниот пат – тој може и да свртува во раскрсницата, а дополнителната табла тогаш го покажува неговиот правец.";
@@ -869,6 +877,14 @@ function buildPalette(){
   }
 }
 
+const ZOOMS=[1,1.15,1.3,1.45,1.6,1.8];
+let zoomIdx=2; try{ const zr=localStorage.getItem('dd_zoom'); if(zr!==null && zr!==''){ const z=+zr; if(z>=0 && z<ZOOMS.length) zoomIdx=z; } }catch(e){}
+function viewBox(){ const z=ZOOMS[zoomIdx], w=800/z, h=600/z; return [400-w/2,300-h/2,w,h]; }
+function applyZoom(){ board.setAttribute('viewBox',viewBox().map(v=>v.toFixed(2)).join(' ')); document.getElementById('zoomVal').textContent=Math.round(ZOOMS[zoomIdx]*100)+'%';
+  document.getElementById('zoomOut').disabled=zoomIdx===0; document.getElementById('zoomIn').disabled=zoomIdx===ZOOMS.length-1; try{localStorage.setItem('dd_zoom',zoomIdx);}catch(e){} }
+function setZoom(d){ zoomIdx=Math.max(0,Math.min(ZOOMS.length-1,zoomIdx+d)); applyZoom(); render(); }
+function fitStage(){ const m=stage.parentElement, cs=getComputedStyle(m), W=m.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight), H=m.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom); if(W>0&&H>0) stage.style.width=Math.min(W,H*4/3)+'px'; }
+function svgToClient(x,y){ const pt=board.createSVGPoint(); pt.x=x; pt.y=y; return pt.matrixTransform(board.getScreenCTM()); }
 function svgPoint(e){ const pt=board.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; return pt.matrixTransform(board.getScreenCTM().inverse()); }
 function overBoard(e){ const r=board.getBoundingClientRect(); return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom; }
 
@@ -876,7 +892,7 @@ let drag=null;
 function startNewDrag(e,kind){
   e.preventDefault(); closeMenus();
   const g=document.createElement('div'); g.className='ghost';
-  const sc=board.getBoundingClientRect().width/800;
+  const sc=board.getBoundingClientRect().width/viewBox()[2];
   g.innerHTML=`<svg viewBox="-30 -40 60 80" style="width:${60*sc}px;height:${80*sc}px;overflow:visible"><g transform="scale(${SC})">${sprite(kind,kind==='ped'?'#7e57c2':COLORS[0],{exp:true})}</g></svg>`;
   g.style.width=60*sc+'px'; g.style.height=80*sc+'px'; g.style.margin=`${-40*sc}px 0 0 ${-30*sc}px`;
   document.body.appendChild(g);
@@ -987,9 +1003,9 @@ function renderPop(){
   pop=document.createElement('div'); pop.className='pop'; pop.innerHTML=html;
   stage.appendChild(pop);
   // position
-  const r=board.getBoundingClientRect(), sr=stage.getBoundingClientRect(), sc=r.width/800;
-  let x=(anchor.x*sc)+(r.left-sr.left)+28, y=(anchor.y*sc)+(r.top-sr.top)-pop.offsetHeight/2;
-  if(x+pop.offsetWidth>sr.width) x=(anchor.x*sc)-pop.offsetWidth-28;
+  const sr=stage.getBoundingClientRect(), cp=svgToClient(anchor.x,anchor.y), ax=cp.x-sr.left, ay=cp.y-sr.top;
+  let x=ax+28, y=ay-pop.offsetHeight/2;
+  if(x+pop.offsetWidth>sr.width) x=ax-pop.offsetWidth-28;
   x=Math.max(4,Math.min(x,sr.width-pop.offsetWidth-4)); y=Math.max(4,Math.min(y,sr.height-pop.offsetHeight-4));
   pop.style.left=x+'px'; pop.style.top=y+'px';
   pop.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -1098,7 +1114,7 @@ function loadInitial(){
 }
 
 // ===================== export =====================
-function exportSVGString(){ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">${renderSVG(true)}</svg>`; }
+function exportSVGString(){ const vb=viewBox(); return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb.map(v=>v.toFixed(2)).join(' ')}" width="800" height="600">${renderSVG(true)}</svg>`; }
 function pngBlob(scale=2){
   return new Promise((res,rej)=>{
     const img=new Image();
@@ -1455,11 +1471,16 @@ document.addEventListener('keydown',e=>{
   else if((e.key==='Delete'||e.key==='Backspace') && selected && selected.type==='item'){ snapshot(); S.items=S.items.filter(i=>i.id!==selected.id); selected=null; commit(); }
   else if(e.key==='Escape'){ selected=null; render(); document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show')); }
 });
-window.addEventListener('resize',()=>{ if(selected) renderPop(); });
+window.addEventListener('resize',()=>{ fitStage(); if(selected) renderPop(); });
+document.getElementById('zoomIn').onclick=()=>setZoom(1);
+document.getElementById('zoomOut').onclick=()=>setZoom(-1);
+board.addEventListener('wheel',e=>{ if(!(e.ctrlKey||e.metaKey)) return; e.preventDefault(); setZoom(e.deltaY<0?1:-1); },{passive:false});
 window.addEventListener('hashchange',()=>{ const code=location.hash.slice(1); if(code && code!==encode()){ const st=decode(code); if(st){ S=st; selected=null; render(); } } });
 
 loadInitial();
+fitStage(); applyZoom();
 applyI18n();
+setTimeout(()=>{ fitStage(); },60);
 </script>
 </body>
 </html>
