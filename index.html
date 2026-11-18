@@ -1467,7 +1467,7 @@ document.getElementById('solClose').onclick=()=>setSol(false);
 document.getElementById('propBtn').onclick=()=>setProp(!propOpen);
 document.getElementById('propClose').onclick=()=>setProp(false);
 document.getElementById('redo').onclick=redo;
-document.getElementById('clear').onclick=()=>{ if(!S.items.length && S.preset==='none') return; snapshot(); const keep={layout:S.layout,markings:S.markings,labels:S.labels}; S=Object.assign(freshState(),keep); selected=null; commit(); };
+document.getElementById('clear').onclick=()=>{ if(!S.items.length && S.preset===(isRing()?'ring':'none')) return; snapshot(); const keep={layout:S.layout,markings:S.markings,labels:S.labels,rlanes:S.rlanes}; S=Object.assign(freshState(),keep); if(isRing()){ S.preset='ring'; S.ctl=presetCtl('ring'); } prop.steps=[]; prop.res=null; selected=null; commit(); };
 document.getElementById('copy').onclick=copyImage;
 document.getElementById('dl').onclick=e=>{ e.stopPropagation(); const m=document.getElementById('dlMenu'); m.hidden=!m.hidden; };
 document.querySelectorAll('#dlMenu button').forEach(b=>b.onclick=()=>{ closeMenus(); download(b.dataset.f); });
