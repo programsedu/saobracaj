@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saobraćajni dijagrami</title>
+<style>
+:root{--bg:#f4f0ea;--ink:#1f2a30;--muted:#5b6770;--teal:#0f5c63;--line:#e2ddd5;--card:#fff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+body{display:flex;flex-direction:column;min-height:100vh}
+header,footer{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:8px 14px;flex-wrap:wrap}
+footer{border-top:1px solid var(--line);border-bottom:none}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;margin-right:auto;white-space:nowrap}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.grp{display:flex;align-items:center;gap:8px}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;padding:2px}
+.seg button{border:0;background:none;border-radius:999px;padding:5px 12px;font-weight:700;font-size:12px;color:var(--muted);cursor:pointer;text-transform:uppercase}
+.seg button.on{background:var(--teal);color:#fff}
+select{font:inherit;font-size:12px;font-weight:700;color:var(--teal);border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:#fff;cursor:pointer;text-transform:uppercase}
+select.lang{text-transform:none}
+.icons{display:flex;gap:2px;align-items:center}
+.ib{border:0;background:none;width:34px;height:34px;border-radius:8px;cursor:pointer;color:var(--muted);display:grid;place-items:center;position:relative}
+.ib:hover:not(:disabled){background:#eef3f3;color:var(--teal)}
+.ib:disabled{opacity:.35;cursor:default}
+.ib svg{width:18px;height:18px}
+.sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;position:relative;overflow:hidden}
+#stage{position:relative;width:min(100%,calc((100vh - 150px)*4/3),1100px);aspect-ratio:4/3}
+#board{width:100%;height:100%;display:block;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);touch-action:none;user-select:none}
+#board [data-id],#board [data-slot]{cursor:pointer}
+.palette{display:flex;gap:6px;align-items:center;touch-action:none}
+.part{width:46px;height:30px;border:0;background:none;border-radius:8px;cursor:grab;display:grid;place-items:center}
+.part:hover{background:#eef3f3}
+.part svg{width:44px;height:26px;pointer-events:none}
+.hint{color:var(--muted);font-size:13px;margin-right:auto}
+.help{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;font-weight:700;color:var(--muted);cursor:pointer}
+.pop{max-height:calc(100% - 8px);overflow:auto;max-width:310px;position:absolute;z-index:20;background:#fff;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:12px;min-width:220px;font-size:12px}
+.pop h4{margin:0 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pop .row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;font-weight:700;font-size:11px;cursor:pointer;color:var(--ink);text-transform:uppercase}
+.btn.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.btn.ic{width:34px;height:34px;padding:0;display:grid;place-items:center}
+.btn.ic svg{width:18px;height:18px}
+.sw{width:24px;height:24px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #ccc;cursor:pointer}
+.sw.on{box-shadow:0 0 0 2px var(--teal)}
+.pop .foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:10px;gap:10px}
+.del{border:0;background:none;color:#c0392b;font-weight:700;font-size:11px;cursor:pointer;text-transform:uppercase}
+.signs{display:flex;gap:6px;flex-wrap:wrap}
+.signs .btn{display:flex;flex-direction:column;align-items:center;gap:4px;width:88px;padding:7px 4px;font-size:10px;line-height:1.15;text-align:center}
+.signs svg{width:28px;height:30px}
+.xgrid{display:grid;grid-template-columns:repeat(7,34px);gap:5px;margin-bottom:6px}
+.xgrid .btn{width:34px;height:34px;padding:0;display:grid;place-items:center}
+.xgrid .btn.on{background:#d9ecec;border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
+.xgrid svg{width:27px;height:27px}
+.xnames{font-size:11px;color:var(--muted);margin-bottom:4px;min-height:14px}
+.panelbtn{display:flex;align-items:center;gap:8px;text-align:left;text-transform:none;width:100%;margin-bottom:10px}
+.panelbtn svg{width:30px;height:24px;flex:none}
+.menu{position:absolute;z-index:30;background:#fff;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:6px;top:40px;right:0;min-width:120px}
+.menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:6px;font-weight:600;cursor:pointer}
+.menu button:hover{background:#eef3f3}
+.ghost{position:fixed;pointer-events:none;z-index:50;width:60px;height:80px;margin:-40px 0 0 -30px;opacity:.85}
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#1f2a30;color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.modal.show{display:flex}
+.modal .box{background:#fff;border-radius:14px;max-width:520px;padding:20px 22px;line-height:1.5;font-size:14px}
+.modal .box h3{margin:0 0 8px}
+.modal input{width:100%;font:inherit;font-size:12px;padding:8px;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.solbtn{background:var(--teal);color:#fff;border-color:var(--teal);padding:8px 12px;font-size:12px}
+.solbtn.on{background:#fff;color:var(--teal)}
+.sol{position:absolute;top:14px;right:14px;bottom:14px;width:min(380px,calc(100% - 28px));background:#fff;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.18);overflow:auto;padding:14px 16px;z-index:25;font-size:13px;line-height:1.45}
+.sol .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.sol .head b{font-size:15px}
+.sol .reg{background:#eef6f6;border-radius:10px;padding:8px 10px;margin:6px 0 12px;color:#21474b}
+.sol .step{display:flex;gap:10px;margin-bottom:12px}
+.sol .num{flex:none;width:26px;height:26px;border-radius:7px;background:var(--teal);color:#fff;font-weight:700;display:grid;place-items:center}
+.sol .ent{margin-bottom:6px}
+.sol .ent .who{font-weight:700}
+.sol .ent ul{margin:3px 0 0;padding-left:18px;color:#36454d}
+.sol .tog{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.sol h5{margin:14px 0 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sol .disc{font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;margin-top:12px}
+.sol .warn{color:#b04a00}
+@media (max-width:700px){.hint{display:none}.brand span{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg width="28" height="28" viewBox="0 0 28 28"><rect x="2" y="2" width="24" height="24" rx="6" fill="#8bc34a"/><rect x="11" y="2" width="6" height="24" fill="#5f6168"/><rect x="2" y="11" width="24" height="6" fill="#5f6168"/><rect x="14.5" y="18" width="2" height="5" rx="1" fill="#2f7fdc"/></svg>
+    <span data-t="title"></span>
+  </div>
+  <div class="grp"><span class="lbl" data-t="layout"></span>
+    <div class="seg" id="layoutSeg"><button data-v="4" data-t="fourway"></button><button data-v="t">T</button></div>
+  </div>
+  <div class="grp"><span class="lbl" data-t="controls"></span>
+    <select id="preset">
+      <option value="allstop" data-t="allstop"></option>
+      <option value="twostop" data-t="twostop"></option>
+      <option value="signals" data-t="signals"></option>
+      <option value="none" data-t="uncontrolled"></option>
+      <option value="priority" data-t="prioPreset"></option>
+      <option value="custom" data-t="custom" disabled></option>
+    </select>
+    <select id="prioDir" hidden></select>
+  </div>
+  <button class="btn solbtn" id="solBtn" data-t="solve"></button>
+  <div class="icons">
+    <button class="ib" id="undo" data-tt="undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+    <button class="ib" id="redo" data-tt="redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+    <div class="sep"></div>
+    <button class="ib" id="copy" data-tt="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></button>
+    <div style="position:relative">
+      <button class="ib" id="dl" data-tt="download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></button>
+      <div class="menu" id="dlMenu" hidden><button data-f="png">PNG</button><button data-f="svg">SVG</button></div>
+    </div>
+    <button class="ib" id="share" data-tt="share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></button>
+    <div class="sep"></div>
+    <button class="ib" id="clear" data-tt="clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 15h10l1-15"/></svg></button>
+    <div class="sep"></div>
+    <select class="lang" id="lang">
+      <option value="sr">Srpski</option><option value="mk">Македонски</option><option value="bg">Български</option><option value="ro">Română</option><option value="en">English</option>
+    </select>
+  </div>
+</header>
+<main>
+  <div id="stage"><svg id="board" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <div class="sol" id="solPanel" hidden><div class="head"><b data-t="solTitle"></b><button class="ib" id="solClose" aria-label="close">✕</button></div><div id="solBody"></div></div>
+</main>
+<footer>
+  <button class="help" id="helpBtn">?</button>
+  <span class="lbl" data-t="parts"></span>
+  <div class="palette" id="palette"></div>
+  <span class="hint" id="hint" data-t="hint"></span>
+  <div class="grp"><span class="lbl" data-t="markings"></span>
+    <select id="markings"><option value="eu" data-t="eu"></option><option value="us" data-t="us"></option></select>
+  </div>
+  <div class="grp"><span class="lbl" data-t="labels"></span>
+    <select id="labels"><option value="none" data-t="none"></option><option value="num" data-t="numbers"></option><option value="let" data-t="letters"></option></select>
+  </div>
+</footer>
+<div class="toast" id="toast"></div>
+<div class="modal" id="helpModal"><div class="box"><h3 data-t="helpTitle"></h3><p data-t="helpText"></p><button class="btn on" data-close data-t="ok"></button></div></div>
+<div class="modal" id="shareModal"><div class="box"><h3 data-t="share"></h3><p data-t="shareText"></p><input id="shareInput" readonly><button class="btn on" id="shareCopy" data-t="copyLink"></button> <button class="btn" data-close data-t="ok"></button></div></div>
+
+<script>
+// ===================== i18n =====================
+const I18N = {
+ en:{title:"Driving Diagrams",layout:"Layout",fourway:"Four-way",controls:"Controls",allstop:"All-way stop",twostop:"Two-way stop",signals:"Signals",uncontrolled:"Uncontrolled",custom:"Custom",
+  undo:"Undo",redo:"Redo",copy:"Copy image",download:"Download",share:"Share link",clear:"Clear",parts:"Parts",hint:"Drag a car onto a lane to start",
+  markings:"Markings",eu:"Europe",us:"USA",labels:"Labels",none:"None",numbers:"Numbers",letters:"Letters",
+  maneuver:"Maneuver",left:"Left",straight:"Straight",right:"Right",uturn:"U-turn",color:"Color",signal:"Turn signal",auto:"Auto",hazards:"Hazards",
+  pathArrow:"Path arrow",del:"Delete",lights:"Emergency lights",on:"On",off:"Off",crossing:"Crossing",waiting:"Waiting",
+  appr_s:"South approach",appr_w:"West approach",appr_n:"North approach",appr_e:"East approach",
+  sNone:"None",sStop:"Stop",sYield:"Yield",sLight:"Light",red:"Red",amber:"Amber",green:"Green",
+  car:"Car",ambulance:"Ambulance",fire:"Fire truck",police:"Police car",bus:"School bus",bike:"Cyclist",ped:"Pedestrian",
+  copied:"Image copied!",copyFail:"Couldn't copy the image here – use Download",linkCopied:"Link copied",saved:"Saved",dlFail:"Download isn't available here",
+  helpTitle:"How it works",ok:"OK",copyLink:"Copy link",
+  shareText:"This link opens the same diagram. Send it to students or paste it into your materials.",
+  helpText:"Drag road users from the bar below onto a lane — they snap into place. Click a road user to set its maneuver, color, turn signal and path arrow, or drag it to another spot. Click a + square beside an approach to add a stop sign, a yield sign or a traffic light. Use Labels to number road users for questions like “Who goes first?”. Undo/redo with Ctrl+Z / Ctrl+Y; delete the selected item with Delete."},
+ sr:{title:"Saobraćajni dijagrami",layout:"Raskrsnica",fourway:"Četiri kraka",controls:"Regulisanje",allstop:"STOP na svim prilazima",twostop:"STOP na sporednom putu",signals:"Semafori",uncontrolled:"Neregulisano",custom:"Prilagođeno",
+  undo:"Poništi",redo:"Ponovi",copy:"Kopiraj sliku",download:"Preuzmi",share:"Podeli link",clear:"Obriši sve",parts:"Učesnici",hint:"Prevuci automobil na traku da počneš",
+  markings:"Oznake na putu",eu:"Evropa",us:"SAD",labels:"Oznake",none:"Bez",numbers:"Brojevi",letters:"Slova",
+  maneuver:"Manevar",left:"Levo",straight:"Pravo",right:"Desno",uturn:"Polukružno",color:"Boja",signal:"Migavac",auto:"Auto",hazards:"Sva četiri",
+  pathArrow:"Strelica putanje",del:"Obriši",lights:"Rotaciona svetla",on:"Uklj.",off:"Isklj.",crossing:"Prelazi",waiting:"Čeka",
+  appr_s:"Južni prilaz",appr_w:"Zapadni prilaz",appr_n:"Severni prilaz",appr_e:"Istočni prilaz",
+  sNone:"Bez",sStop:"Stop",sYield:"Ustupi",sLight:"Semafor",red:"Crveno",amber:"Žuto",green:"Zeleno",
+  car:"Automobil",ambulance:"Hitna pomoć",fire:"Vatrogasno vozilo",police:"Policija",bus:"Školski autobus",bike:"Biciklista",ped:"Pešak",
+  copied:"Slika je kopirana!",copyFail:"Kopiranje slike ovde nije moguće – koristi Preuzmi",linkCopied:"Link je kopiran",saved:"Sačuvano",dlFail:"Preuzimanje ovde nije dostupno",
+  helpTitle:"Kako se koristi",ok:"U redu",copyLink:"Kopiraj link",
+  shareText:"Ovaj link otvara isti dijagram. Pošalji ga učenicima ili ga ubaci u materijale.",
+  helpText:"Prevuci učesnike iz donje trake na saobraćajnu traku — sami se poravnaju. Klikni na učesnika da podesiš manevar, boju, migavac i strelicu putanje, ili ga prevuci na drugo mesto. Klikni na kvadratić + pored prilaza da dodaš znak STOP, znak „ustupi prvenstvo” ili semafor. Opcijom Oznake numeriši učesnike za pitanja tipa „Ko prvi prolazi?”. Poništi/ponovi: Ctrl+Z / Ctrl+Y; izabrani element briše se tasterom Delete."},
+ mk:{title:"Сообраќајни дијаграми",layout:"Раскрсница",fourway:"Четири крака",controls:"Регулирање",allstop:"СТОП на сите приоди",twostop:"СТОП на споредниот пат",signals:"Семафори",uncontrolled:"Нерегулирано",custom:"Прилагодено",
+  undo:"Врати",redo:"Повтори",copy:"Копирај слика",download:"Преземи",share:"Сподели линк",clear:"Избриши сè",parts:"Учесници",hint:"Повлечи автомобил на лента за да започнеш",
+  markings:"Ознаки на патот",eu:"Европа",us:"САД",labels:"Ознаки",none:"Без",numbers:"Броеви",letters:"Букви",
+  maneuver:"Маневар",left:"Лево",straight:"Право",right:"Десно",uturn:"Полукружно",color:"Боја",signal:"Трепкач",auto:"Авто",hazards:"Сите четири",
+  pathArrow:"Стрелка за патека",del:"Избриши",lights:"Ротациони светла",on:"Вкл.",off:"Искл.",crossing:"Преминува",waiting:"Чека",
+  appr_s:"Јужен приод",appr_w:"Западен приод",appr_n:"Северен приод",appr_e:"Источен приод",
+  sNone:"Без",sStop:"Стоп",sYield:"Отстапи",sLight:"Семафор",red:"Црвено",amber:"Жолто",green:"Зелено",
+  car:"Автомобил",ambulance:"Брза помош",fire:"Противпожарно возило",police:"Полиција",bus:"Училишен автобус",bike:"Велосипедист",ped:"Пешак",
+  copied:"Сликата е копирана!",copyFail:"Копирањето слика тука не е можно – користи Преземи",linkCopied:"Линкот е копиран",saved:"Зачувано",dlFail:"Преземањето тука не е достапно",
+  helpTitle:"Како се користи",ok:"Во ред",copyLink:"Копирај линк",
+  shareText:"Овој линк го отвора истиот дијаграм. Испрати го на учениците или вметни го во материјалите.",
+  helpText:"Повлечи ги учесниците од долната лента на сообраќајна лента — сами се порамнуваат. Кликни на учесник за да ги поставиш маневарот, бојата, трепкачот и стрелката за патека, или повлечи го на друго место. Кликни на квадратчето + покрај приодот за да додадеш знак СТОП, знак „отстапи првенство“ или семафор. Со Ознаки нумерирај ги учесниците за прашања како „Кој поминува прв?“. Врати/повтори: Ctrl+Z / Ctrl+Y; избраниот елемент се брише со Delete."},
+ bg:{title:"Пътни диаграми",layout:"Кръстовище",fourway:"Четири рамена",controls:"Регулиране",allstop:"СТОП от всички посоки",twostop:"СТОП на второстепенния път",signals:"Светофари",uncontrolled:"Нерегулирано",custom:"Персонализирано",
+  undo:"Отмени",redo:"Повтори",copy:"Копирай изображението",download:"Изтегли",share:"Сподели връзка",clear:"Изчисти",parts:"Участници",hint:"Плъзнете кола върху лента, за да започнете",
+  markings:"Пътна маркировка",eu:"Европа",us:"САЩ",labels:"Етикети",none:"Без",numbers:"Числа",letters:"Букви",
+  maneuver:"Маневра",left:"Наляво",straight:"Направо",right:"Надясно",uturn:"Обратен завой",color:"Цвят",signal:"Мигач",auto:"Авто",hazards:"Аварийни",
+  pathArrow:"Стрелка за траектория",del:"Изтрий",lights:"Сигнални светлини",on:"Вкл.",off:"Изкл.",crossing:"Пресича",waiting:"Чака",
+  appr_s:"Южен подход",appr_w:"Западен подход",appr_n:"Северен подход",appr_e:"Източен подход",
+  sNone:"Без",sStop:"Стоп",sYield:"Пропусни",sLight:"Светофар",red:"Червено",amber:"Жълто",green:"Зелено",
+  car:"Кола",ambulance:"Линейка",fire:"Пожарна",police:"Полиция",bus:"Училищен автобус",bike:"Велосипедист",ped:"Пешеходец",
+  copied:"Изображението е копирано!",copyFail:"Копирането тук не е възможно – използвайте Изтегли",linkCopied:"Връзката е копирана",saved:"Запазено",dlFail:"Изтеглянето тук не е достъпно",
+  helpTitle:"Как се използва",ok:"Добре",copyLink:"Копирай връзката",
+  shareText:"Тази връзка отваря същата диаграма. Изпратете я на учениците или я поставете в материалите си.",
+  helpText:"Плъзнете участниците от долната лента върху пътна лента — те се подреждат сами. Щракнете върху участник, за да зададете маневра, цвят, мигач и стрелка за траектория, или го преместете. Щракнете върху квадратчето + до подхода, за да добавите знак СТОП, знак „Пропусни“ или светофар. С Етикети номерирайте участниците за въпроси като „Кой минава пръв?“. Отмяна/повтаряне: Ctrl+Z / Ctrl+Y; избраният елемент се изтрива с Delete."},
+ ro:{title:"Diagrame rutiere",layout:"Intersecție",fourway:"Patru brațe",controls:"Semnalizare",allstop:"STOP pe toate accesele",twostop:"STOP pe drumul secundar",signals:"Semafoare",uncontrolled:"Nedirijată",custom:"Personalizat",
+  undo:"Anulează",redo:"Refă",copy:"Copiază imaginea",download:"Descarcă",share:"Distribuie linkul",clear:"Șterge tot",parts:"Participanți",hint:"Trage o mașină pe o bandă pentru a începe",
+  markings:"Marcaje",eu:"Europa",us:"SUA",labels:"Etichete",none:"Fără",numbers:"Numere",letters:"Litere",
+  maneuver:"Manevră",left:"Stânga",straight:"Înainte",right:"Dreapta",uturn:"Întoarcere",color:"Culoare",signal:"Semnalizare",auto:"Auto",hazards:"Avarii",
+  pathArrow:"Săgeată traseu",del:"Șterge",lights:"Girofaruri",on:"Pornit",off:"Oprit",crossing:"Traversează",waiting:"Așteaptă",
+  appr_s:"Accesul de sud",appr_w:"Accesul de vest",appr_n:"Accesul de nord",appr_e:"Accesul de est",
+  sNone:"Fără",sStop:"Stop",sYield:"Cedează",sLight:"Semafor",red:"Roșu",amber:"Galben",green:"Verde",
+  car:"Mașină",ambulance:"Ambulanță",fire:"Mașină de pompieri",police:"Poliție",bus:"Autobuz școlar",bike:"Biciclist",ped:"Pieton",
+  copied:"Imagine copiată!",copyFail:"Copierea imaginii nu e posibilă aici – folosește Descarcă",linkCopied:"Link copiat",saved:"Salvat",dlFail:"Descărcarea nu e disponibilă aici",
+  helpTitle:"Cum funcționează",ok:"OK",copyLink:"Copiază linkul",
+  shareText:"Acest link deschide aceeași diagramă. Trimite-l elevilor sau pune-l în materialele tale.",
+  helpText:"Trage participanții din bara de jos pe o bandă — se aliniază singuri. Dă clic pe un participant pentru a-i seta manevra, culoarea, semnalizarea și săgeata traseului, sau trage-l în alt loc. Dă clic pe pătratul + de lângă un acces pentru a adăuga indicator STOP, „Cedează trecerea” sau semafor. Cu Etichete numerotezi participanții pentru întrebări de tipul „Cine trece primul?”. Anulează/refă: Ctrl+Z / Ctrl+Y; elementul selectat se șterge cu Delete."}
+};
+const I18N2 = {
+ en:{prioPreset:"Priority road",prioDir:"Priority road",mainSign:"Main sign",extraSigns:"More signs",sPrio:"Priority road",sPrioEnd:"End of priority",
+  dir_s:"South",dir_w:"West",dir_n:"North",dir_e:"East",panel:"Supplementary panel: direction of the priority road",
+  n_stop:"Stop",n_yield:"Give way",n_prio:"Priority road",n_prioEnd:"End of priority road",n_light:"Traffic light",n_panel:"Direction of the priority road",
+  n_i26:"Crossroads of equal-priority roads",n_i27:"Crossroads with a minor road",n_i28:"Junction with a minor road",n_i20:"Traffic signals ahead",n_i14:"Pedestrian crossing ahead",
+  n_iii6:"Pedestrian crossing",n_ii26:"No left turn",n_ii261:"No right turn",n_ii27:"No U-turn",n_ii43s:"Ahead only",n_ii43l:"Turn left only",n_ii43r:"Turn right only",n_ii43sr:"Ahead or right only",n_ii43sl:"Ahead or left only"},
+ sr:{prioPreset:"Put sa prvenstvom prolaza",prioDir:"Glavni put",mainSign:"Glavni znak",extraSigns:"Ostali znakovi",sPrio:"Put sa prvenstvom",sPrioEnd:"Kraj puta sa prvenstvom",
+  dir_s:"Jug",dir_w:"Zapad",dir_n:"Sever",dir_e:"Istok",panel:"Dopunska tabla: pravac pružanja puta sa prvenstvom prolaza",
+  n_stop:"Obavezno zaustavljanje",n_yield:"Ustupanje prvenstva prolaza",n_prio:"Put sa prvenstvom prolaza",n_prioEnd:"Završetak puta sa prvenstvom prolaza",n_light:"Semafor",n_panel:"Pravac pružanja puta sa prvenstvom prolaza",
+  n_i26:"Ukrštanje puteva iste važnosti",n_i27:"Ukrštanje sa sporednim putem pod pravim uglom",n_i28:"Spajanje sa sporednim putem pod pravim uglom",n_i20:"Nailazak na semafor",n_i14:"Nailazak na pešački prelaz",
+  n_iii6:"Pešački prelaz",n_ii26:"Zabrana skretanja levo",n_ii261:"Zabrana skretanja desno",n_ii27:"Zabrana polukružnog okretanja",n_ii43s:"Obavezan smer – pravo",n_ii43l:"Obavezan smer – levo",n_ii43r:"Obavezan smer – desno",n_ii43sr:"Obavezan smer – pravo ili desno",n_ii43sl:"Obavezan smer – pravo ili levo"},
+ mk:{prioPreset:"Пат со првенство на минување",prioDir:"Главен пат",mainSign:"Главен знак",extraSigns:"Други знаци",sPrio:"Пат со првенство",sPrioEnd:"Крај на пат со првенство",
+  dir_s:"Југ",dir_w:"Запад",dir_n:"Север",dir_e:"Исток",panel:"Дополнителна табла: правец на патот со првенство",
+  n_stop:"Задолжително запирање",n_yield:"Отстапување на првенство",n_prio:"Пат со првенство на минување",n_prioEnd:"Крај на пат со првенство на минување",n_light:"Семафор",n_panel:"Правец на патот со првенство",
+  n_i26:"Вкрстување на патишта со еднакво значење",n_i27:"Вкрстување со споредна патна",n_i28:"Спојување со споредна патна",n_i20:"Наидување на семафор",n_i14:"Наидување на пешачки премин",
+  n_iii6:"Пешачки премин",n_ii26:"Забрането свртување лево",n_ii261:"Забрането свртување десно",n_ii27:"Забрането полукружно свртување",n_ii43s:"Задолжителен правец – право",n_ii43l:"Задолжителен правец – лево",n_ii43r:"Задолжителен правец – десно",n_ii43sr:"Задолжителен правец – право или десно",n_ii43sl:"Задолжителен правец – право или лево"},
+ bg:{prioPreset:"Път с предимство",prioDir:"Главен път",mainSign:"Основен знак",extraSigns:"Други знаци",sPrio:"Път с предимство",sPrioEnd:"Край на път с предимство",
+  dir_s:"Юг",dir_w:"Запад",dir_n:"Север",dir_e:"Изток",panel:"Допълнителна табела: посока на пътя с предимство",
+  n_stop:"Спиране! Пропусни движещите се по пътя с предимство",n_yield:"Пропусни движещите се по пътя с предимство",n_prio:"Път с предимство",n_prioEnd:"Край на пътя с предимство",n_light:"Светофар",n_panel:"Посока на пътя с предимство",
+  n_i26:"Кръстовище на равнозначни пътища",n_i27:"Кръстовище с път без предимство",n_i28:"Т-образно кръстовище с път без предимство",n_i20:"Светофарна уредба",n_i14:"Пешеходна пътека (предупреждение)",
+  n_iii6:"Пешеходна пътека",n_ii26:"Забранено завиване наляво",n_ii261:"Забранено завиване надясно",n_ii27:"Забранен обратен завой",n_ii43s:"Движение само направо",n_ii43l:"Движение само наляво",n_ii43r:"Движение само надясно",n_ii43sr:"Движение само направо или надясно",n_ii43sl:"Движение само направо или наляво"},
+ ro:{prioPreset:"Drum cu prioritate",prioDir:"Drum principal",mainSign:"Indicator principal",extraSigns:"Alte indicatoare",sPrio:"Drum cu prioritate",sPrioEnd:"Sfârșit drum cu prioritate",
+  dir_s:"Sud",dir_w:"Vest",dir_n:"Nord",dir_e:"Est",panel:"Panou adițional: direcția drumului cu prioritate",
+  n_stop:"Oprire",n_yield:"Cedează trecerea",n_prio:"Drum cu prioritate",n_prioEnd:"Sfârșitul drumului cu prioritate",n_light:"Semafor",n_panel:"Direcția drumului cu prioritate",
+  n_i26:"Intersecție de drumuri de egală importanță",n_i27:"Intersecție cu un drum fără prioritate",n_i28:"Intersecție cu un drum lateral fără prioritate",n_i20:"Semafor în apropiere",n_i14:"Atenție, trecere pentru pietoni",
+  n_iii6:"Trecere pentru pietoni",n_ii26:"Interzis virajul la stânga",n_ii261:"Interzis virajul la dreapta",n_ii27:"Interzisă întoarcerea",n_ii43s:"Obligatoriu înainte",n_ii43l:"Obligatoriu la stânga",n_ii43r:"Obligatoriu la dreapta",n_ii43sr:"Obligatoriu înainte sau la dreapta",n_ii43sl:"Obligatoriu înainte sau la stânga"}
+};
+for(const l in I18N2) Object.assign(I18N[l],I18N2[l]);
+const I18N3={
+ sr:{solve:"✓ Rešenje",solTitle:"Redosled prolaska",stepN:"Korak",together:"prolaze istovremeno",waitGreen:"Čekaju zeleno svetlo",notIncl:"Nisu u zadatku",
+  noUsers:"Postavi vozila na desnu traku ka raskrsnici (ili pešake na pešački prelaz) pa ponovo klikni na Rešenje.",
+  yieldsTo:"Propušta:",free:"Nikoga ne mora da propusti.",
+  reg_light:"Raskrsnica je regulisana semaforima: prvo važe svetla, a vozila koja istovremeno imaju zeleno postupaju po opštim pravilima (skretanje levo, desna strana).",
+  reg_signs:"Raskrsnica je regulisana saobraćajnim znakovima: prvo prolaze vozila na putu sa prvenstvom prolaza, pa vozila sa sporednih puteva – među njima važi pravilo desne strane.",
+  reg_all:"Svi prilazi imaju isti znak (STOP ili „ustupi”), pa su putevi iste važnosti – važi pravilo desne strane.",
+  reg_none:"Raskrsnica nije regulisana – važi pravilo desne strane, a vozilo koje skreće levo propušta vozila iz suprotnog smera.",
+  r_emerg:"{b} je vozilo sa pravom prvenstva prolaza (uključena svetla i sirena)",
+  r_level:"{b} je na putu sa prvenstvom prolaza, a on dolazi sa sporednog puta",
+  r_right:"{b} mu dolazi sa desne strane (pravilo desne strane)",
+  r_left:"skreće levo, a {b} iz suprotnog smera ide pravo ili skreće desno",
+  r_virt:"glavni put skreće; u odnosu na tok glavnog puta on skreće levo, a {b} nastavlja glavnim putem ili skreće desno",
+  r_uturn:"polukružno se okreće, pa propušta {b}",
+  r_ped:"pešak {b} je na obeleženom pešačkom prelazu preko kojeg on prolazi",
+  r_pedTurn:"skreće, a pešak {b} na zeleno prelazi ulicu u koju on skreće",
+  r_queue:"{b} je ispred njega u istoj traci",
+  p_main:"Nalazi se na putu sa prvenstvom prolaza.",p_green:"Ima zeleno svetlo.",p_emerg:"Vozilo sa pravom prvenstva prolaza (uključena rotaciona svetla) – svi ga propuštaju.",
+  p_ped:"Pešak na obeleženom pešačkom prelazu ima prednost u odnosu na vozila koja preko njega prelaze.",
+  n_stopS:"Ima znak STOP – mora potpuno da zaustavi vozilo pre raskrsnice.",n_noLights:"Rotaciona svetla nisu uključena – nema pravo prvenstva, ponaša se kao obično vozilo.",
+  n_red:"Ima crveno svetlo – ne ulazi u raskrsnicu.",n_amber:"Ima žuto svetlo – ne ulazi u raskrsnicu (osim ako ne može bezbedno da stane).",n_pedRed:"Pešak ima crveno – čeka.",
+  n_out:"udaljava se od raskrsnice",n_pedWait:"pešak ne prelazi",n_forb:"Pažnja: ovaj manevar je zabranjen znakom „{s}”.",
+  n_deadlock:"Zatvoren krug: svako od preostalih vozila mora nekoga da propusti, pa pravilo ne daje rešenje – vozači moraju da se sporazumeju. Kao primer je izabrano da prvi krene {a}.",
+  disc:"Rešenje se računa automatski po opštim pravilima Zakona o bezbednosti saobraćaja na putevima i pretpostavlja da svi učesnici nailaze istovremeno. Pre upotrebe na času proveri ga."},
+ en:{solve:"✓ Solution",solTitle:"Order of passage",stepN:"Step",together:"go at the same time",waitGreen:"Waiting for green",notIncl:"Not part of the task",
+  noUsers:"Place vehicles in the right-hand lane heading into the intersection (or pedestrians on a crossing), then click Solution again.",
+  yieldsTo:"Gives way to:",free:"Does not have to give way to anyone.",
+  reg_light:"The intersection is controlled by traffic lights: the lights come first, and vehicles that have green at the same time follow the general rules (left turn, right-hand rule).",
+  reg_signs:"The intersection is controlled by signs: vehicles on the priority road go first, then vehicles from the minor roads – among them the right-hand rule applies.",
+  reg_all:"All approaches have the same sign (STOP or give way), so the roads are of equal importance – the right-hand rule applies.",
+  reg_none:"The intersection is uncontrolled – the right-hand rule applies, and a vehicle turning left gives way to oncoming vehicles.",
+  r_emerg:"{b} is a priority vehicle (lights and siren on)",r_level:"{b} is on the priority road, while it comes from a minor road",r_right:"{b} comes from its right (right-hand rule)",
+  r_left:"it turns left and {b} comes from the opposite direction going straight or turning right",r_virt:"the priority road bends; relative to the priority road it turns left, while {b} follows the priority road or turns right",
+  r_uturn:"it makes a U-turn, so it gives way to {b}",r_ped:"pedestrian {b} is on the marked crossing it drives over",r_pedTurn:"it turns, and pedestrian {b} crosses the street it turns into on green",r_queue:"{b} is in front of it in the same lane",
+  p_main:"It is on the priority road.",p_green:"It has a green light.",p_emerg:"Priority vehicle (emergency lights on) – everyone gives way to it.",p_ped:"A pedestrian on a marked crossing has priority over vehicles driving over it.",
+  n_stopS:"It has a STOP sign – it must come to a full stop before the intersection.",n_noLights:"Emergency lights are off – no priority, it behaves like an ordinary vehicle.",
+  n_red:"It has a red light – it does not enter the intersection.",n_amber:"It has an amber light – it does not enter (unless it cannot stop safely).",n_pedRed:"The pedestrian has red – waits.",
+  n_out:"is leaving the intersection",n_pedWait:"pedestrian is not crossing",n_forb:"Note: this maneuver is prohibited by the “{s}” sign.",
+  n_deadlock:"Deadlock: each remaining vehicle has to give way to someone, so the rules give no answer – drivers must agree. As an example, {a} goes first.",
+  disc:"The solution is computed automatically from the general rules and assumes all road users arrive at the same time. Check it before using it in class."},
+ mk:{solve:"✓ Решение",solTitle:"Редослед на минување",stepN:"Чекор",together:"минуваат истовремено",waitGreen:"Чекаат зелено светло",notIncl:"Не се дел од задачата",
+  noUsers:"Постави возила на десната лента кон раскрсницата (или пешаци на пешачки премин) и повторно кликни на Решение.",
+  yieldsTo:"Пропушта:",free:"Не мора никого да пропушти.",
+  reg_light:"Раскрсницата е регулирана со семафори: прво важат светлата, а возилата што истовремено имаат зелено постапуваат по општите правила (свртување лево, десна страна).",
+  reg_signs:"Раскрсницата е регулирана со сообраќајни знаци: прво минуваат возилата на патот со првенство, па возилата од споредните патишта – меѓу нив важи правилото на десна страна.",
+  reg_all:"Сите приоди имаат ист знак (СТОП или „отстапи“), па патиштата се со еднакво значење – важи правилото на десна страна.",
+  reg_none:"Раскрсницата не е регулирана – важи правилото на десна страна, а возилото што свртува лево ги пропушта возилата од спротивната насока.",
+  r_emerg:"{b} е возило со првенство на минување (вклучени светла и сирена)",r_level:"{b} е на патот со првенство, а тоа доаѓа од споредниот пат",r_right:"{b} му доаѓа од десната страна (правило на десна страна)",
+  r_left:"свртува лево, а {b} од спротивната насока оди право или свртува десно",r_virt:"главниот пат свртува; во однос на текот на главниот пат тоа свртува лево, а {b} продолжува по главниот пат или свртува десно",
+  r_uturn:"полукружно се врти, па го пропушта {b}",r_ped:"пешакот {b} е на обележаниот пешачки премин преку кој тоа минува",r_pedTurn:"свртува, а пешакот {b} на зелено ја преминува улицата во која тоа свртува",r_queue:"{b} е пред него во истата лента",
+  p_main:"Се наоѓа на патот со првенство на минување.",p_green:"Има зелено светло.",p_emerg:"Возило со првенство на минување (вклучени ротациони светла) – сите го пропуштаат.",p_ped:"Пешакот на обележан пешачки премин има предност пред возилата што минуваат преку него.",
+  n_stopS:"Има знак СТОП – мора целосно да запре пред раскрсницата.",n_noLights:"Ротационите светла не се вклучени – нема првенство, се однесува како обично возило.",
+  n_red:"Има црвено светло – не влегува во раскрсницата.",n_amber:"Има жолто светло – не влегува во раскрсницата (освен ако не може безбедно да запре).",n_pedRed:"Пешакот има црвено – чека.",
+  n_out:"се оддалечува од раскрсницата",n_pedWait:"пешакот не преминува",n_forb:"Внимание: овој маневар е забранет со знакот „{s}“.",
+  n_deadlock:"Затворен круг: секое од преостанатите возила мора некого да пропушти, па правилото не дава решение – возачите мора да се договорат. Како пример е избрано прв да тргне {a}.",
+  disc:"Решението се пресметува автоматски според општите правила и претпоставува дека сите учесници наидуваат истовремено. Провери го пред употреба на час."},
+ bg:{solve:"✓ Решение",solTitle:"Ред на преминаване",stepN:"Стъпка",together:"минават едновременно",waitGreen:"Чакат зелена светлина",notIncl:"Не участват в задачата",
+  noUsers:"Поставете превозни средства в дясната лента към кръстовището (или пешеходци на пешеходна пътека) и отново щракнете Решение.",
+  yieldsTo:"Пропуска:",free:"Не е длъжен да пропуска никого.",
+  reg_light:"Кръстовището е регулирано със светофари: първо важат светлините, а превозните средства, които едновременно имат зелено, спазват общите правила (завиване наляво, дясна страна).",
+  reg_signs:"Кръстовището е регулирано с пътни знаци: първо минават превозните средства по пътя с предимство, след това тези от второстепенните пътища – между тях важи правилото на дясната страна.",
+  reg_all:"Всички подходи имат един и същ знак (СТОП или „Пропусни“), затова пътищата са равнозначни – важи правилото на дясната страна.",
+  reg_none:"Кръстовището не е регулирано – важи правилото на дясната страна, а завиващият наляво пропуска насрещно движещите се.",
+  r_emerg:"{b} е превозно средство с предимство (включени светлини и сирена)",r_level:"{b} е на пътя с предимство, а то идва от второстепенен път",r_right:"{b} идва отдясно (правило на дясната страна)",
+  r_left:"завива наляво, а {b} идва насреща и продължава направо или завива надясно",r_virt:"пътят с предимство завива; спрямо него то завива наляво, а {b} продължава по пътя с предимство или завива надясно",
+  r_uturn:"прави обратен завой, затова пропуска {b}",r_ped:"пешеходецът {b} е на пешеходната пътека, през която то минава",r_pedTurn:"завива, а пешеходецът {b} пресича на зелено улицата, в която то завива",r_queue:"{b} е пред него в същата лента",
+  p_main:"Намира се на пътя с предимство.",p_green:"Има зелена светлина.",p_emerg:"Превозно средство с предимство (включени сигнални светлини) – всички го пропускат.",p_ped:"Пешеходецът на пешеходна пътека има предимство пред превозните средства, които минават през нея.",
+  n_stopS:"Има знак СТОП – трябва да спре напълно преди кръстовището.",n_noLights:"Сигналните светлини не са включени – няма предимство, движи се като обикновено превозно средство.",
+  n_red:"Има червена светлина – не влиза в кръстовището.",n_amber:"Има жълта светлина – не влиза в кръстовището (освен ако не може да спре безопасно).",n_pedRed:"Пешеходецът има червено – чака.",
+  n_out:"се отдалечава от кръстовището",n_pedWait:"пешеходецът не пресича",n_forb:"Внимание: тази маневра е забранена със знака „{s}“.",
+  n_deadlock:"Затворен кръг: всяко от останалите превозни средства трябва да пропусне някого, затова правилата не дават отговор – водачите трябва да се договорят. Като пример първо тръгва {a}.",
+  disc:"Решението се изчислява автоматично по общите правила и предполага, че всички участници пристигат едновременно. Проверете го преди да го използвате в час."},
+ ro:{solve:"✓ Soluție",solTitle:"Ordinea de trecere",stepN:"Pasul",together:"trec în același timp",waitGreen:"Așteaptă verde",notIncl:"Nu fac parte din exercițiu",
+  noUsers:"Așază vehicule pe banda din dreapta spre intersecție (sau pietoni pe trecere), apoi apasă din nou Soluție.",
+  yieldsTo:"Cedează trecerea lui:",free:"Nu trebuie să cedeze nimănui.",
+  reg_light:"Intersecția este dirijată prin semafoare: întâi contează luminile, iar vehiculele care au verde în același timp respectă regulile generale (viraj la stânga, prioritate de dreapta).",
+  reg_signs:"Intersecția este semnalizată cu indicatoare: întâi trec vehiculele de pe drumul cu prioritate, apoi cele de pe drumurile secundare – între ele se aplică prioritatea de dreapta.",
+  reg_all:"Toate accesele au același indicator (STOP sau Cedează), deci drumurile sunt de importanță egală – se aplică prioritatea de dreapta.",
+  reg_none:"Intersecția este nedirijată – se aplică prioritatea de dreapta, iar vehiculul care virează la stânga cedează celor din sens opus.",
+  r_emerg:"{b} este vehicul cu prioritate (lumini și sirenă pornite)",r_level:"{b} este pe drumul cu prioritate, iar el vine de pe un drum secundar",r_right:"{b} vine din dreapta lui (prioritate de dreapta)",
+  r_left:"virează la stânga, iar {b} vine din sens opus și merge înainte sau virează la dreapta",r_virt:"drumul cu prioritate cotește; față de acesta el virează la stânga, iar {b} continuă pe drumul cu prioritate sau virează la dreapta",
+  r_uturn:"întoarce, deci cedează lui {b}",r_ped:"pietonul {b} este pe trecerea marcată peste care trece",r_pedTurn:"virează, iar pietonul {b} traversează pe verde strada în care virează",r_queue:"{b} este în fața lui pe aceeași bandă",
+  p_main:"Se află pe drumul cu prioritate.",p_green:"Are lumină verde.",p_emerg:"Vehicul cu prioritate (girofaruri pornite) – toți îi cedează.",p_ped:"Pietonul aflat pe trecerea marcată are prioritate față de vehiculele care trec peste ea.",
+  n_stopS:"Are indicator STOP – trebuie să oprească complet înainte de intersecție.",n_noLights:"Girofarurile nu sunt pornite – nu are prioritate, se comportă ca un vehicul obișnuit.",
+  n_red:"Are roșu – nu intră în intersecție.",n_amber:"Are galben – nu intră în intersecție (dacă poate opri în siguranță).",n_pedRed:"Pietonul are roșu – așteaptă.",
+  n_out:"se îndepărtează de intersecție",n_pedWait:"pietonul nu traversează",n_forb:"Atenție: această manevră este interzisă de indicatorul „{s}”.",
+  n_deadlock:"Blocaj: fiecare vehicul rămas trebuie să cedeze cuiva, deci regulile nu dau o soluție – conducătorii trebuie să se înțeleagă. Ca exemplu, pornește primul {a}.",
+  disc:"Soluția este calculată automat după regulile generale și presupune că toți participanții sosesc în același timp. Verific-o înainte de a o folosi la oră."}
+};
+for(const l in I18N3) Object.assign(I18N[l],I18N3[l]);
+I18N.en.helpText+=" In Controls, “Priority road” lets you choose the main road – it can also turn at the intersection, and the supplementary panel then shows its direction.";
+I18N.sr.helpText+=" U Regulisanju opcija „Put sa prvenstvom prolaza” omogućava da izabereš glavni put – on može i da skreće u raskrsnici, a dopunska tabla tada prikazuje njegov pravac.";
+I18N.mk.helpText+=" Во Регулирање, опцијата „Пат со првенство на минување“ ти овозможува да го избереш главниот пат – тој може и да свртува во раскрсницата, а дополнителната табла тогаш го покажува неговиот правец.";
+I18N.bg.helpText+=" В Регулиране опцията „Път с предимство“ позволява да изберете главния път – той може и да завива в кръстовището, а допълнителната табела тогава показва посоката му.";
+I18N.ro.helpText+=" La Semnalizare, opțiunea „Drum cu prioritate” îți permite să alegi drumul principal – acesta poate și să vireze în intersecție, iar panoul adițional îi arată atunci direcția.";
+const SR_CODE={stop:'II-2',yield:'II-1',prio:'III-3',prioEnd:'III-3.1',light:'',panel:'IV-23',i26:'I-26',i27:'I-27',i28:'I-28',i20:'I-20',i14:'I-14',iii6:'III-6',ii26:'II-26',ii261:'II-26.1',ii27:'II-27',ii43s:'II-43',ii43l:'II-43',ii43r:'II-43',ii43sr:'II-43',ii43sl:'II-43'};
+const EXTRAS=['i26','i27','i28','i20','i14','iii6','ii26','ii261','ii27','ii43s','ii43l','ii43r','ii43sr','ii43sl'];
+const PRIO_PAIRS={'4':['sn','we','sw','se','wn','ne'],'t':['we','sw','se']};
+let lang = 'sr';
+const t = k => (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
+const signName = code => t('n_'+code) + (lang==='sr' && SR_CODE[code] ? ` (${SR_CODE[code]})` : '');
+
+// ===================== constants =====================
+const C = {x:400,y:300};
+const ARM_DEG = {s:0,w:90,n:180,e:270};
+const DEG_ARM = {0:'s',90:'w',180:'n',270:'e'};
+const ARM_LEN = {s:300,n:300,w:400,e:400};
+const COLORS = ['#2f7fdc','#f39c12','#16a085','#e98bb8','#f1d43c','#6ec1f0','#e5552e','#f2f2f2'];
+const KINDS = {
+  car:{hl:22,w:22,code:'c'}, ambulance:{hl:27,w:24,code:'a'}, fire:{hl:34,w:25,code:'f'},
+  police:{hl:22,w:22,code:'p'}, bus:{hl:38,w:25,code:'b'}, bike:{hl:14,w:12,code:'k'}, ped:{hl:8,w:16,code:'w'}
+};
+const KIND_BY_CODE = Object.fromEntries(Object.entries(KINDS).map(([k,v])=>[v.code,k]));
+const EMERGENCY = new Set(['ambulance','fire','police']);
+const TREES = {
+  tl:[[110,90,34],[230,170,18],[60,210,14]], tr:[[640,90,26],[740,150,18],[520,190,14]],
+  bl:[[100,470,24],[250,540,16],[60,380,12]], br:[[620,470,30],[720,560,16],[520,555,12]],
+  top:[[110,90,34],[260,170,18],[540,80,26],[700,170,20],[400,130,16]]
+};
+
+// ===================== state =====================
+const blankCtl=()=>({t:'none',c:'g',panel:false,x:[]});
+function freshState(){ return {layout:'4',markings:'eu',labels:'none',preset:'none',prio:null,ctl:{s:blankCtl(),w:blankCtl(),n:blankCtl(),e:blankCtl()},items:[],nid:1}; }
+const defaultPrio=()=> S.layout==='t'?'we':'sn';
+const isStraightPair=p=>p==='sn'||p==='we';
+let S = freshState();
+let undoStack=[], redoStack=[];
+let selected=null;          // {type:'item',id} | {type:'slot',arm}
+const arms = () => S.layout==='t' ? ['s','w','e'] : ['s','w','n','e'];
+
+function snapshot(){ undoStack.push(JSON.stringify(S)); if(undoStack.length>200) undoStack.shift(); redoStack=[]; }
+function undo(){ if(!undoStack.length) return; redoStack.push(JSON.stringify(S)); S=JSON.parse(undoStack.pop()); selected=null; commit(false); }
+function redo(){ if(!redoStack.length) return; undoStack.push(JSON.stringify(S)); S=JSON.parse(redoStack.pop()); selected=null; commit(false); }
+
+// ===================== geometry =====================
+const rad = d => d*Math.PI/180;
+function toWorld(arm,lx,ly){ const a=rad(ARM_DEG[arm]),c=Math.cos(a),s=Math.sin(a); return {x:C.x+lx*c-ly*s, y:C.y+lx*s+ly*c}; }
+function toLocal(arm,wx,wy){ const a=rad(ARM_DEG[arm]),c=Math.cos(a),s=Math.sin(a),x=wx-C.x,y=wy-C.y; return {x:x*c+y*s, y:-x*s+y*c}; }
+function relArm(arm,off){ return DEG_ARM[(ARM_DEG[arm]+off)%360]; }
+function targetArm(arm,m){ return m==='left'?relArm(arm,90):m==='straight'?relArm(arm,180):m==='right'?relArm(arm,270):arm; }
+function maneuverOK(arm,m){ return arms().includes(targetArm(arm,m)); }
+const laneX = it => (it.kind==='bike'?30:20);
+
+function itemLocal(it){
+  if(it.kind==='ped') return {x:it.end*56, y:52, ang: it.end>0?270:90};
+  const lx = laneX(it);
+  return it.side==='in' ? {x:lx,y:it.dist,ang:0} : {x:-lx,y:it.dist,ang:180};
+}
+
+function snapItem(kind,wx,wy){
+  let best=null;
+  for(const arm of arms()){
+    const L=toLocal(arm,wx,wy), len=ARM_LEN[arm];
+    if(kind==='ped'){
+      for(const end of [1,-1]){
+        const d=Math.hypot(L.x-end*56,L.y-52);
+        if(d<70 && (!best||d<best.d)) best={d,arm,end};
+      }
+      continue;
+    }
+    if(L.y<36 || L.y>len+30 || Math.abs(L.x)>62) continue;
+    const hl=KINDS[kind].hl, side=L.x>=0?'in':'out';
+    const lx = kind==='bike'?30:20;
+    const min = side==='in'? 70+hl : 46+hl;
+    const dist=Math.round(Math.max(min,Math.min(len-hl+6,L.y)));
+    const d=Math.abs(Math.abs(L.x)-lx)+Math.max(0,40-L.y);
+    if(!best||d<best.d) best={d,arm,side,dist};
+  }
+  return best;
+}
+
+// ===================== drawing helpers =====================
+function shade(hex,amt){ let n=parseInt(hex.slice(1),16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255; const f=v=>Math.max(0,Math.min(255,Math.round(v+amt*255))); return `rgb(${f(r)},${f(g)},${f(b)})`; }
+function arrowColor(it){
+  if(it.kind==='ambulance') return '#d63031'; if(it.kind==='fire') return '#c0392b'; if(it.kind==='police') return '#2d5bd7'; if(it.kind==='bus') return '#e0a800';
+  return it.color==='#f2f2f2' ? '#8a959c' : it.color;
+}
+const GLASS='#1d2a38';
+function sprite(kind,color,opts={}){
+  const exp=opts.exp, fl=opts.lights;
+  const flA = fl ? `class="${exp?'':'fa'}"` : '', flB = fl ? `class="${exp?'':'fb'}"` : '';
+  const lb = (y,w=9) => `<rect x="${-w}" y="${y}" width="${w}" height="4" rx="1" fill="${fl?'#ff3b30':'#8b2a2a'}" ${flA}/><rect x="0" y="${y}" width="${w}" height="4" rx="1" fill="${fl?'#2e7dff':'#2a3f8b'}" ${flB}/>`;
+  switch(kind){
+    case 'car': return `<rect x="-11" y="-22" width="22" height="44" rx="6" fill="${color}" stroke="${shade(color,-.25)}" stroke-width="1"/>
+      <rect x="-8" y="-21.5" width="4" height="2" rx="1" fill="#fff7c2"/><rect x="4" y="-21.5" width="4" height="2" rx="1" fill="#fff7c2"/>
+      <path d="M-9 -9 Q0 -13 9 -9 L8 -3 L-8 -3Z" fill="${GLASS}"/><rect x="-8" y="-2" width="16" height="12" rx="2" fill="${shade(color,.12)}"/>
+      <path d="M-8 11 L8 11 L9 16 Q0 18 -9 16Z" fill="${GLASS}"/>`;
+    case 'police': return `<rect x="-11" y="-22" width="22" height="44" rx="6" fill="#1e1e24" stroke="#000" stroke-width="1"/>
+      <rect x="-9" y="-3" width="18" height="15" rx="2" fill="#f4f4f4"/>
+      <rect x="-8" y="-21.5" width="4" height="2" rx="1" fill="#fff7c2"/><rect x="4" y="-21.5" width="4" height="2" rx="1" fill="#fff7c2"/>
+      <path d="M-9 -9 Q0 -13 9 -9 L8 -3 L-8 -3Z" fill="${GLASS}"/><path d="M-8 12 L8 12 L9 16 Q0 18 -9 16Z" fill="${GLASS}"/>${lb(1)}`;
+    case 'ambulance': return `<rect x="-12" y="-27" width="24" height="54" rx="5" fill="#fbfbfb" stroke="#b8b8b8" stroke-width="1"/>
+      <path d="M-10 -20 Q0 -24 10 -20 L9 -14 L-9 -14Z" fill="${GLASS}"/>
+      <rect x="-12" y="-9" width="24" height="3" fill="#e53935"/><rect x="-3" y="2" width="6" height="16" fill="#e53935"/><rect x="-8" y="7" width="16" height="6" fill="#e53935"/>
+      ${lb(-12)}`;
+    case 'fire': return `<rect x="-12.5" y="-34" width="25" height="68" rx="4" fill="#d32f2f" stroke="#8e1b1b" stroke-width="1"/>
+      <path d="M-10 -28 Q0 -32 10 -28 L9 -22 L-9 -22Z" fill="${GLASS}"/>
+      <rect x="-7" y="-14" width="3" height="44" fill="#cfd8dc"/><rect x="4" y="-14" width="3" height="44" fill="#cfd8dc"/>
+      ${[...Array(8)].map((_,i)=>`<rect x="-4" y="${-12+i*5.5}" width="8" height="1.6" fill="#cfd8dc"/>`).join('')}${lb(-20)}`;
+    case 'bus': return `<rect x="-12.5" y="-38" width="25" height="76" rx="4" fill="#f2c230" stroke="#b38a00" stroke-width="1"/>
+      <path d="M-10 -34 Q0 -37 10 -34 L10 -29 L-10 -29Z" fill="${GLASS}"/>
+      <rect x="-12.5" y="-20" width="25" height="2" fill="#222"/><rect x="-12.5" y="18" width="25" height="2" fill="#222"/>
+      <rect x="-6" y="-8" width="12" height="8" rx="1" fill="#e0ad18" stroke="#b38a00" stroke-width=".6"/><rect x="-6" y="6" width="12" height="8" rx="1" fill="#e0ad18" stroke="#b38a00" stroke-width=".6"/>`;
+    case 'bike': return `<rect x="-1.6" y="-14" width="3.2" height="9" rx="1.4" fill="#222"/><rect x="-1.6" y="5" width="3.2" height="9" rx="1.4" fill="#222"/>
+      <rect x="-7" y="-9" width="14" height="2" rx="1" fill="#444"/>
+      <ellipse cx="0" cy="1" rx="7" ry="5" fill="${color}" stroke="${shade(color,-.25)}" stroke-width=".8"/><circle cx="0" cy="-3" r="3.6" fill="#333"/>`;
+    case 'ped': return `<ellipse cx="0" cy="0" rx="8" ry="4.6" fill="${color}" stroke="${shade(color,-.25)}" stroke-width=".8"/><circle cx="0" cy="0" r="3.8" fill="#3b2a1a"/>`;
+  }
+  return '';
+}
+function signalLights(it,exp){
+  if(it.kind==='bike'||it.kind==='ped') return '';
+  let s=it.signal;
+  if(s==='auto') s = it.side!=='in' ? 'none' : (it.man==='left'||it.man==='uturn')?'left':it.man==='right'?'right':'none';
+  if(s==='none') return '';
+  const k=KINDS[it.kind], cls=exp?'':'class="blink"';
+  const dot=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.2" fill="#ffb300" stroke="#fff3c4" stroke-width="1" ${cls}/>`;
+  let out='';
+  const sides = s==='hazards'?[-1,1]: s==='left'?[-1]:[1];
+  for(const sd of sides){ out+=dot(sd*(k.w/2-1),-k.hl+3)+dot(sd*(k.w/2-1),k.hl-3); }
+  return out;
+}
+function arrowHead(x,y,dx,dy,col){
+  const px=-dy,py=dx, tx=x+dx*9, ty=y+dy*9, b1x=x+px*7.5, b1y=y+py*7.5, b2x=x-px*7.5, b2y=y-py*7.5;
+  return `<polygon points="${tx},${ty} ${b1x},${b1y} ${b2x},${b2y}" fill="${col}" stroke="rgba(0,0,0,.28)" stroke-width="1"/>`;
+}
+function pathFor(it){
+  const col=arrowColor(it);
+  let d,end;
+  if(it.kind==='ped'){
+    if(it.man!=='cross') return '';
+    d=`M${it.end*44} 52 L${-it.end*40} 52`; end=[-it.end*40,52,-it.end,0];
+  } else {
+    const k=KINDS[it.kind], lx=laneX(it);
+    if(it.side==='out'){
+      const a=it.dist+k.hl+3, b=Math.min(ARM_LEN[it.arm]-12,it.dist+k.hl+90);
+      if(b-a<25) return '';
+      d=`M${-lx} ${a} L${-lx} ${b}`; end=[-lx,b,0,1];
+    } else {
+      const sy=it.dist-k.hl-3, m=it.man;
+      if(!maneuverOK(it.arm,m)) return '';
+      const L=ARM_LEN[targetArm(it.arm,m)], far=Math.min(L-14,160);
+      if(m==='straight'){ d=`M${lx} ${sy} L${lx} ${-far}`; end=[lx,-far,0,-1]; }
+      else if(m==='right'){ d=`M${lx} ${sy} L${lx} 46 Q${lx} ${lx} 46 ${lx} L${far} ${lx}`; end=[far,lx,1,0]; }
+      else if(m==='left'){ d=`M${lx} ${sy} L${lx} 40 Q${lx} ${-lx} -40 ${-lx} L${-far} ${-lx}`; end=[-far,-lx,-1,0]; }
+      else { const back=Math.min(ARM_LEN[it.arm]-14, Math.max(110,it.dist)); d=`M${lx} ${sy} L${lx} 30 C${lx} -12 ${-lx} -12 ${-lx} 30 L${-lx} ${back}`; end=[-lx,back,0,1]; }
+    }
+  }
+  return `<path d="${d}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${d}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${arrowHead(end[0],end[1],end[2],end[3],col)}`;
+}
+function signIcon(type,c,exp,small){
+  if(type==='stop'){
+    const pts=[...Array(8)].map((_,i)=>{const a=rad(22.5+i*45);return `${(13*Math.cos(a)).toFixed(2)},${(13*Math.sin(a)).toFixed(2)}`}).join(' ');
+    return `<polygon points="${pts}" fill="#c62828" stroke="#fff" stroke-width="1.6"/><text x="0" y="2.4" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="6.6" fill="#fff">STOP</text>`;
+  }
+  if(type==='yield') return `<polygon points="-13,-10 13,-10 0,12" fill="#fff" stroke="#c62828" stroke-width="3" stroke-linejoin="round"/>`;
+  if(type==='light'){
+    const L=(cy,col,on)=>`<circle cx="0" cy="${cy}" r="4.3" fill="${on?col:'#3a3a3a'}"/>`;
+    return `<rect x="-7.5" y="-18" width="15" height="36" rx="3.5" fill="#222" stroke="#fff" stroke-width="1.2"/>${L(-11,'#ff3b30',c==='r')}${L(0,'#ffc107',c==='y')}${L(11,'#2ecc40',c==='g')}`;
+  }
+  if(type==='prio'||type==='prioEnd'){
+    let d=`<g transform="rotate(45)"><rect x="-9.5" y="-9.5" width="19" height="19" fill="#fff" stroke="#444" stroke-width=".8"/><rect x="-6.3" y="-6.3" width="12.6" height="12.6" fill="#f6c700"/></g>`;
+    if(type==='prioEnd') d+=`<path d="M-8.5 4.5L4.5 -8.5M-6 7L7 -6M-3.5 9.5L9.5 -3.5" stroke="#222" stroke-width="1.1"/>`;
+    return d;
+  }
+  if(XSIGN[type]) return XSIGN[type]();
+  if(exp) return '';
+  return `<rect x="-11" y="-11" width="22" height="22" rx="4" fill="rgba(255,255,255,.12)" stroke="rgba(255,255,255,.75)" stroke-width="1.4" stroke-dasharray="3 2.5"/><path d="M-5 0H5M0 -5V5" stroke="rgba(255,255,255,.85)" stroke-width="1.6"/>`;
+}
+const K='#111';
+const TRI=sym=>`<polygon points="0,-12.5 13.5,10.5 -13.5,10.5" fill="#fff" stroke="#d32f2f" stroke-width="2.8" stroke-linejoin="round"/>${sym}`;
+const PROH=sym=>`<circle r="12" fill="#fff" stroke="#d32f2f" stroke-width="2.8"/>${sym}<line x1="-8.2" y1="-8.2" x2="8.2" y2="8.2" stroke="#d32f2f" stroke-width="2.4"/>`;
+const MAND=sym=>`<circle r="12.5" fill="#1e63b8" stroke="#fff" stroke-width="1.2"/>${sym}`;
+const aS=c=>`<path d="M0 8.5V-3" stroke="${c}" stroke-width="2.6" fill="none"/><polygon points="0,-8.5 -4.3,-2.5 4.3,-2.5" fill="${c}"/>`;
+const aL=c=>`<path d="M3 8.5V2a3 3 0 0 0-3-3H-3" stroke="${c}" stroke-width="2.6" fill="none"/><polygon points="-8.5,-1 -2.5,-5.3 -2.5,3.3" fill="${c}"/>`;
+const aR=c=>`<g transform="scale(-1 1)">${aL(c)}</g>`;
+const aU=c=>`<path d="M-4 8.5V-1a4 4 0 0 1 8 0V3" stroke="${c}" stroke-width="2.4" fill="none"/><polygon points="4,8.5 -0.3,2.5 8.3,2.5" fill="${c}"/>`;
+const aSR=c=>`<path d="M-2 8.5V-3" stroke="${c}" stroke-width="2.4" fill="none"/><polygon points="-2,-8.5 -6,-2.6 2,-2.6" fill="${c}"/><path d="M-2 5Q-2 1.5 1.5 1.5H4" stroke="${c}" stroke-width="2.4" fill="none"/><polygon points="9,1.5 3.6,-2.4 3.6,5.4" fill="${c}"/>`;
+const PEDS=(c=K)=>`<circle cx="0.6" cy="-4.2" r="1.7" fill="${c}"/><path d="M0.6 -2.2L-0.4 3M-0.4 3L-3.2 8M-0.4 3L2.6 8M0.2 -0.2L-3 1.6M0.2 -0.2L3.2 2" stroke="${c}" stroke-width="1.4" stroke-linecap="round" fill="none"/>`;
+const XSIGN={
+  i26:()=>TRI(`<path d="M-4.6 -1.6L4.6 7.6M4.6 -1.6L-4.6 7.6" stroke="${K}" stroke-width="2.3"/>`),
+  i27:()=>TRI(`<path d="M0 -5V9.2" stroke="${K}" stroke-width="3.4"/><path d="M-6.5 3H6.5" stroke="${K}" stroke-width="1.6"/>`),
+  i28:()=>TRI(`<path d="M0 -5V9.2" stroke="${K}" stroke-width="3.4"/><path d="M0 3H6.5" stroke="${K}" stroke-width="1.6"/>`),
+  i20:()=>TRI(`<rect x="-2.9" y="-5.2" width="5.8" height="13.6" rx="1.3" fill="${K}"/><circle cy="-2.5" r="1.5" fill="#e53935"/><circle cy="1.6" r="1.5" fill="#ffc107"/><circle cy="5.7" r="1.5" fill="#43a047"/>`),
+  i14:()=>TRI(`<g transform="translate(0 1.6) scale(.95)">${PEDS()}</g><path d="M-7.5 9.3H7.5" stroke="${K}" stroke-width="1.1" stroke-dasharray="1.8 1.2"/>`),
+  iii6:()=>`<rect x="-12" y="-12" width="24" height="24" rx="2.5" fill="#1e63b8" stroke="#fff" stroke-width="1"/><polygon points="0,-10 10,8.5 -10,8.5" fill="#fff"/><g transform="translate(0 1.8) scale(.8)">${PEDS()}</g><path d="M-6 7.6H6" stroke="${K}" stroke-width="1" stroke-dasharray="1.6 1.1"/>`,
+  ii26:()=>PROH(aL(K)), ii261:()=>PROH(aR(K)), ii27:()=>PROH(aU(K)),
+  ii43s:()=>MAND(aS('#fff')), ii43l:()=>MAND(aL('#fff')), ii43r:()=>MAND(aR('#fff')),
+  ii43sr:()=>MAND(aSR('#fff')), ii43sl:()=>MAND(`<g transform="scale(-1 1)">${aSR('#fff')}</g>`)
+};
+function prioPanel(a,pr){
+  pr = pr || S.prio || defaultPrio();
+  const pos={0:[0,7],90:[-10,0],180:[0,-7],270:[10,0]};
+  let s=`<rect x="-13" y="-9.5" width="26" height="19" rx="1.5" fill="#fff" stroke="#222" stroke-width="1"/>`;
+  for(const b of arms()){ const [x,y]=pos[(ARM_DEG[b]-ARM_DEG[a]+360)%360]; s+=`<line x1="0" y1="0" x2="${x}" y2="${y}" stroke="#222" stroke-width="1.3"/>`; }
+  s+=`<path d="M${pr.split('').map(b=>pos[(ARM_DEG[b]-ARM_DEG[a]+360)%360].join(' ')).join(' L0 0 L')}" stroke="#222" stroke-width="3.6" fill="none" stroke-linejoin="round"/>`;
+  return s;
+}
+function tree(x,y,r){
+  const parts=[[0,0,1],[-.55,.15,.7],[.5,.25,.7],[.1,-.45,.65],[.1,.55,.6]];
+  return `<g transform="translate(${x} ${y})">${parts.map(([dx,dy,s])=>`<circle cx="${dx*r+3}" cy="${dy*r+4}" r="${s*r}" fill="rgba(0,0,0,.18)"/>`).join('')}
+  ${parts.map(([dx,dy,s])=>`<circle cx="${dx*r}" cy="${dy*r}" r="${s*r}" fill="#2e6b2f" stroke="#245a25" stroke-width="1"/>`).join('')}
+  <circle cx="${-r*.3}" cy="${-r*.3}" r="${r*.2}" fill="rgba(255,255,255,.18)"/></g>`;
+}
+
+function labelText(i,mode){ mode=mode||effLabels(); if(mode==='num') return String(i+1); let s='',n=i; do{ s=String.fromCharCode(65+n%26)+s; n=Math.floor(n/26)-1; }while(n>=0); return s; }
+
+function renderSVG(exp){
+  const A=arms(), T=S.layout==='t', eu=S.markings==='eu';
+  let s='';
+  s+=`<defs><clipPath id="clip"><rect width="800" height="600" rx="${exp?0:10}"/></clipPath>`;
+  if(!exp) s+=`<style>.blink{animation:bl 1s steps(1) infinite}.fa{animation:bl .6s steps(1) infinite}.fb{animation:bl .6s steps(1) infinite reverse}@keyframes bl{50%{opacity:.15}}</style>`;
+  s+=`</defs><g clip-path="url(#clip)">`;
+  s+=`<rect width="800" height="600" fill="#5f6168"/>`;
+  // grass
+  const G='#8bc34a', curb='stroke="#fff" stroke-width="3" fill="none"';
+  if(T){ s+=`<rect x="0" y="0" width="800" height="260" fill="${G}"/><path d="M0 260H800" ${curb}/>`; }
+  else{
+    s+=`<path d="M0 0H360V240A20 20 0 0 1 340 260H0Z" fill="${G}"/><path d="M800 0H440V240A20 20 0 0 0 460 260H800Z" fill="${G}"/>`;
+    s+=`<path d="M0 260H340A20 20 0 0 0 360 240V0" ${curb}/><path d="M800 260H460A20 20 0 0 1 440 240V0" ${curb}/>`;
+  }
+  s+=`<path d="M0 600H360V360A20 20 0 0 0 340 340H0Z" fill="${G}"/><path d="M800 600H440V360A20 20 0 0 1 460 340H800Z" fill="${G}"/>`;
+  s+=`<path d="M0 340H340A20 20 0 0 1 360 360V600" ${curb}/><path d="M800 340H460A20 20 0 0 0 440 360V600" ${curb}/>`;
+  const tr = T ? [...TREES.top,...TREES.bl,...TREES.br] : [...TREES.tl,...TREES.tr,...TREES.bl,...TREES.br];
+  s+=tr.map(([x,y,r])=>tree(x,y,r)).join('');
+  // arm markings
+  for(const arm of A){
+    const len=ARM_LEN[arm];
+    s+=`<g transform="translate(400 300) rotate(${ARM_DEG[arm]})">`;
+    if(eu){ s+=`<path d="M0 66V140" stroke="#fff" stroke-width="3"/><path d="M0 158V${len}" stroke="#fff" stroke-width="3" stroke-dasharray="20 14"/>`; }
+    else  { s+=`<path d="M-3 66V${len}M3 66V${len}" stroke="#f2c230" stroke-width="2.4"/>`; }
+    s+=`<path d="M37 62V${len}M-37 62V${len}" stroke="rgba(255,255,255,.55)" stroke-width="1.6"/>`;
+    s+=`<rect x="1" y="63" width="37" height="5" fill="#fff"/>`;
+    if(eu){ for(let i=0;i<7;i++) s+=`<rect x="${-35+i*10.3}" y="43" width="6" height="16" fill="#fff"/>`; }
+    else  { s+=`<path d="M-38 44H38M-38 59H38" stroke="#fff" stroke-width="2.4"/>`; for(let i=0;i<7;i++) s+=`<rect x="${-35+i*10.3}" y="47" width="6" height="9" fill="rgba(255,255,255,.35)"/>`; }
+    s+=`</g>`;
+  }
+  // items: arrows first, then sprites
+  const items=S.items.filter(it=>A.includes(it.arm));
+  for(const it of items){
+    if(!it.arrow) continue;
+    s+=`<g transform="translate(400 300) rotate(${ARM_DEG[it.arm]})" pointer-events="none">${pathFor(it)}</g>`;
+  }
+  for(const it of items){
+    const p=itemLocal(it), k=KINDS[it.kind];
+    const sel = !exp && selected && selected.type==='item' && selected.id===it.id;
+    s+=`<g transform="translate(400 300) rotate(${ARM_DEG[it.arm]}) translate(${p.x} ${p.y}) rotate(${p.ang})" data-id="${it.id}">`;
+    s+=`<rect x="${-k.w/2-6}" y="${-k.hl-6}" width="${k.w+12}" height="${k.hl*2+12}" fill="transparent"/>`;
+    s+=`<g transform="translate(1.5 2)" opacity=".22">${`<rect x="${-k.w/2}" y="${-k.hl}" width="${k.w}" height="${k.hl*2}" rx="5" fill="#000"/>`}</g>`;
+    s+=sprite(it.kind,it.color,{exp,lights:it.lights});
+    s+=signalLights(it,exp);
+    if(sel) s+=`<rect x="${-k.w/2-4}" y="${-k.hl-4}" width="${k.w+8}" height="${k.hl*2+8}" rx="7" fill="none" stroke="#fff" stroke-width="2"/><rect x="${-k.w/2-6}" y="${-k.hl-6}" width="${k.w+12}" height="${k.hl*2+12}" rx="9" fill="none" stroke="#0f5c63" stroke-width="1.6"/>`;
+    s+=`</g>`;
+  }
+  // controls
+  for(const arm of A){
+    const c=S.ctl[arm], w=toWorld(arm,64,78);
+    const sel = !exp && selected && selected.type==='slot' && selected.arm===arm;
+    const hasPanel = hasPanelOn(arm);
+    const ic=signIcon(c.t,c.c,exp);
+    if(ic){
+      const inner = hasPanel ? `<g transform="translate(0 -9) scale(.92)">${ic}</g><g transform="translate(0 14.5) scale(.82)">${prioPanel(arm)}</g>` : ic;
+      s+=`<g transform="translate(${w.x.toFixed(1)} ${w.y.toFixed(1)})" data-slot="${arm}">${sel?`<rect x="-17" y="-23" width="34" height="46" rx="7" fill="rgba(255,255,255,.35)" stroke="#0f5c63" stroke-width="1.6"/>`:''}${inner}</g>`;
+    }
+    (c.x||[]).forEach((code,i)=>{
+      const p=toWorld(arm,64,78+34+29*i);
+      s+=`<g transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) scale(.92)" data-slot="${arm}">${signIcon(code)}</g>`;
+    });
+  }
+  // labels
+  if(effLabels(exp)!=='none'){
+    items.forEach((it,i)=>{
+      const p=itemLocal(it); let lx=p.x, ly=p.y;
+      if(it.kind==='ped') ly-=20; else lx += (it.side==='in'?1:-1)*(KINDS[it.kind].w/2+15);
+      const w=toWorld(it.arm,lx,ly), txt=labelText(i);
+      s+=`<g transform="translate(${w.x.toFixed(1)} ${w.y.toFixed(1)})" pointer-events="none"><circle r="11" fill="#fff" stroke="#1f2a30" stroke-width="2"/><text y="4.3" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="${txt.length>1?10:12.5}" fill="#1f2a30">${txt}</text></g>`;
+    });
+  }
+  if(solOpen && !exp && sol && sol.stepOf){
+    items.forEach(it=>{
+      const n=sol.stepOf[it.id]; if(!n) return;
+      const p=itemLocal(it); let lx=p.x, ly=p.y;
+      if(it.kind==='ped') ly+=20; else ly += (it.side==='in'?-1:1)*(KINDS[it.kind].hl+13);
+      const w=toWorld(it.arm,lx,ly);
+      s+=`<g transform="translate(${w.x.toFixed(1)} ${w.y.toFixed(1)})" pointer-events="none"><rect x="-11" y="-11" width="22" height="22" rx="6" fill="${n==='w'?'#b04a00':'#0f5c63'}" stroke="#fff" stroke-width="2"/><text y="4.6" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="12.5" fill="#fff">${n==='w'?'…':n}</text></g>`;
+    });
+  }
+  s+=`</g>`;
+  return s;
+}
+
+// ===================== DOM / UI =====================
+const board=document.getElementById('board'), stage=document.getElementById('stage');
+let pop=null;
+
+function hasPanelOn(arm){ const c=S.ctl[arm]; return !!(c.panel && ['stop','yield','prio'].includes(c.t)); }
+function render(){
+  if(solOpen) sol=solve();
+  board.innerHTML=renderSVG(false);
+  if(solOpen) renderSolution();
+  document.getElementById('undo').disabled=!undoStack.length;
+  document.getElementById('redo').disabled=!redoStack.length;
+  document.querySelectorAll('#layoutSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.layout));
+  document.getElementById('preset').value=S.preset;
+  const pd=document.getElementById('prioDir');
+  pd.hidden = !S.prio;
+  if(S.prio){ pd.innerHTML=PRIO_PAIRS[S.layout].map(p=>`<option value="${p}">${t('prioDir')}: ${t('dir_'+p[0])} – ${t('dir_'+p[1])}</option>`).join(''); pd.value=S.prio; }
+  document.getElementById('markings').value=S.markings;
+  document.getElementById('labels').value=S.labels;
+  document.getElementById('hint').style.visibility = S.items.length ? 'hidden':'visible';
+  renderPop();
+}
+function commit(snap=true){ render(); saveLocal(); }
+
+function applyI18n(){
+  document.documentElement.lang=lang;
+  document.title=t('title');
+  document.querySelectorAll('[data-t]').forEach(el=>el.textContent=t(el.dataset.t));
+  document.querySelectorAll('[data-tt]').forEach(el=>{el.title=t(el.dataset.tt);el.setAttribute('aria-label',t(el.dataset.tt));});
+  buildPalette();
+  render();
+}
+
+// palette
+const PARTS=['car','ambulance','fire','police','bus','bike','ped'];
+function buildPalette(){
+  const pal=document.getElementById('palette'); pal.innerHTML='';
+  for(const k of PARTS){
+    const b=document.createElement('button'); b.className='part'; b.title=t(k); b.setAttribute('aria-label',t(k)); b.dataset.kind=k;
+    const sc = k==='bus'?.52: k==='fire'?.58 : k==='ambulance'?.7 : k==='ped'?1.3 : k==='bike'?1.1 : .8;
+    b.innerHTML=`<svg viewBox="-24 -14 48 28"><g transform="rotate(90) scale(${sc})">${sprite(k,k==='ped'?'#7e57c2':k==='bike'?'#2f7fdc':COLORS[0],{exp:true,lights:false})}</g></svg>`;
+    b.addEventListener('pointerdown',e=>startNewDrag(e,k));
+    pal.appendChild(b);
+  }
+}
+
+function svgPoint(e){ const pt=board.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY; return pt.matrixTransform(board.getScreenCTM().inverse()); }
+function overBoard(e){ const r=board.getBoundingClientRect(); return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom; }
+
+let drag=null;
+function startNewDrag(e,kind){
+  e.preventDefault(); closeMenus();
+  const g=document.createElement('div'); g.className='ghost';
+  const sc=board.getBoundingClientRect().width/800;
+  g.innerHTML=`<svg viewBox="-30 -40 60 80" style="width:${60*sc*1.0}px;height:${80*sc}px;overflow:visible"><g>${sprite(kind,kind==='ped'?'#7e57c2':COLORS[0],{exp:true})}</g></svg>`;
+  g.style.width=60*sc+'px'; g.style.height=80*sc+'px'; g.style.margin=`${-40*sc}px 0 0 ${-30*sc}px`;
+  document.body.appendChild(g);
+  drag={type:'new',kind,ghost:g};
+  moveGhost(e);
+}
+function moveGhost(e){ if(drag&&drag.ghost){ drag.ghost.style.left=e.clientX+'px'; drag.ghost.style.top=e.clientY+'px'; } }
+
+board.addEventListener('pointerdown',e=>{
+  const itEl=e.target.closest('[data-id]'), slEl=e.target.closest('[data-slot]');
+  if(itEl){
+    e.preventDefault();
+    const id=+itEl.dataset.id;
+    drag={type:'move',id,sx:e.clientX,sy:e.clientY,moved:false,before:JSON.stringify(S)};
+  } else if(slEl){
+    selected={type:'slot',arm:slEl.dataset.slot}; closeMenus(); render();
+  } else { selected=null; render(); }
+});
+window.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  if(drag.type==='new'){ moveGhost(e); return; }
+  if(drag.type==='move'){
+    if(!drag.moved && Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<5) return;
+    drag.moved=true; selected=null;
+    const it=S.items.find(i=>i.id===drag.id); if(!it) return;
+    const p=svgPoint(e), sn=snapItem(it.kind,p.x,p.y);
+    if(sn){ placeItem(it,sn); render(); }
+  }
+});
+window.addEventListener('pointerup',e=>{
+  if(!drag) return;
+  const d=drag; drag=null;
+  if(d.type==='new'){
+    d.ghost.remove();
+    if(!overBoard(e)) return;
+    const p=svgPoint(e), sn=snapItem(d.kind,p.x,p.y);
+    if(!sn){ return; }
+    snapshot();
+    const it=newItem(d.kind); placeItem(it,sn); S.items.push(it);
+    selected={type:'item',id:it.id}; commit();
+  } else if(d.type==='move'){
+    if(d.moved){ undoStack.push(d.before); redoStack=[]; commit(); }
+    else { selected={type:'item',id:d.id}; closeMenus(); render(); }
+  }
+});
+
+function newItem(kind){
+  const cnt=S.items.filter(i=>i.kind===kind).length;
+  return {id:S.nid++,kind,arm:'s',side:'in',dist:100,end:1,
+    man: kind==='ped'?'cross':'straight', color: kind==='ped'?['#7e57c2','#e5552e','#16a085','#f39c12'][cnt%4] : kind==='bike'?'#2f7fdc':COLORS[cnt%COLORS.length],
+    signal:'auto', arrow:true, lights:EMERGENCY.has(kind)};
+}
+function placeItem(it,sn){
+  it.arm=sn.arm;
+  if(it.kind==='ped'){ it.end=sn.end; return; }
+  it.side=sn.side; it.dist=sn.dist;
+  if(it.side==='in' && !maneuverOK(it.arm,it.man)) it.man = ['straight','right','left','uturn'].find(m=>maneuverOK(it.arm,m));
+}
+
+// ===================== popovers =====================
+const ICON={
+ left:'<path d="M14 20v-8a4 4 0 0 0-4-4H5"/><path d="M9 4L5 8l4 4"/>',
+ straight:'<path d="M12 20V5"/><path d="M7 9l5-5 5 5"/>',
+ right:'<path d="M10 20v-8a4 4 0 0 1 4-4h5"/><path d="M15 4l4 4-4 4"/>',
+ uturn:'<path d="M8 20V10a4 4 0 0 1 8 0v7"/><path d="M13 14l3 3 3-3"/>'
+};
+const ico=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ICON[n]}</svg>`;
+function closePop(){ if(pop){ pop.remove(); pop=null; } }
+function renderPop(){
+  closePop();
+  if(!selected) return;
+  let html='', anchor;
+  if(selected.type==='item'){
+    const it=S.items.find(i=>i.id===selected.id); if(!it){ selected=null; return; }
+    const p=itemLocal(it); anchor=toWorld(it.arm,p.x,p.y);
+    if(it.kind==='ped'){
+      html+=`<h4>${t('maneuver')}</h4><div class="row">${['cross','wait'].map(m=>`<button class="btn ${it.man===m?'on':''}" data-a="man" data-v="${m}">${t(m==='cross'?'crossing':'waiting')}</button>`).join('')}</div>`;
+    } else if(it.side==='in'){
+      html+=`<h4>${t('maneuver')}</h4><div class="row">${['left','straight','right','uturn'].map(m=>`<button class="btn ic ${it.man===m?'on':''}" data-a="man" data-v="${m}" title="${t(m)}" ${maneuverOK(it.arm,m)?'':'disabled style="opacity:.3"'}>${ico(m)}</button>`).join('')}</div>`;
+    }
+    if(!EMERGENCY.has(it.kind) && it.kind!=='bus'){
+      html+=`<h4>${t('color')}</h4><div class="row">${COLORS.map(c=>`<button class="sw ${it.color===c?'on':''}" style="background:${c}" data-a="color" data-v="${c}"></button>`).join('')}</div>`;
+    }
+    if(it.kind!=='ped' && it.kind!=='bike'){
+      html+=`<h4>${t('signal')}</h4><div class="row">${['auto','none','left','right','hazards'].map(v=>`<button class="btn ${it.signal===v?'on':''}" data-a="signal" data-v="${v}">${t(v)}</button>`).join('')}</div>`;
+    }
+    if(EMERGENCY.has(it.kind)){
+      html+=`<h4>${t('lights')}</h4><div class="row"><button class="btn ${it.lights?'on':''}" data-a="lights" data-v="1">${t('on')}</button><button class="btn ${!it.lights?'on':''}" data-a="lights" data-v="0">${t('off')}</button></div>`;
+    }
+    html+=`<div class="foot"><button class="btn ${it.arrow?'on':''}" data-a="arrow">↱ ${t('pathArrow')}</button><button class="del" data-a="del">🗑 ${t('del')}</button></div>`;
+  } else {
+    const arm=selected.arm, c=S.ctl[arm]; anchor=toWorld(arm,64,78);
+    html+=`<h4>${t('appr_'+arm)} · ${t('mainSign')}</h4><div class="signs">${[['none','sNone'],['stop','sStop'],['yield','sYield'],['light','sLight'],['prio','sPrio'],['prioEnd','sPrioEnd']].map(([v,k])=>
+      `<button class="btn ${c.t===v?'on':''}" data-a="ctl" data-v="${v}" title="${v==='none'?t(k):signName(v)}"><svg viewBox="-16 -20 32 40">${v==='none'?'<circle r="7" fill="none" stroke="#999" stroke-dasharray="2 2"/>':signIcon(v,'r',true)}</svg>${t(k)}</button>`).join('')}</div>`;
+    if(c.t==='light'){
+      html+=`<h4 style="margin-top:10px">${t('sLight')}</h4><div class="row">${[['r','red','#ff3b30'],['y','amber','#ffc107'],['g','green','#2ecc40']].map(([v,k,col])=>`<button class="btn ${c.c===v?'on':''}" data-a="lc" data-v="${v}"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${col};margin-right:5px"></span>${t(k)}</button>`).join('')}</div>`;
+    }
+    if(['stop','yield','prio'].includes(c.t)){
+      html+=`<button class="btn panelbtn ${c.panel?'on':''}" data-a="panel" title="${signName('panel')}" style="margin-top:10px"><svg viewBox="-14 -11 28 22">${prioPanel(arm)}</svg><span>${t('panel')}${lang==='sr'?' (IV-23)':''}</span></button>`;
+    }
+    html+=`<h4 style="margin-top:8px">${t('extraSigns')}</h4><div class="xgrid">${EXTRAS.map(code=>`<button class="btn ${(c.x||[]).includes(code)?'on':''}" data-a="x" data-v="${code}" title="${signName(code)}" aria-label="${signName(code)}"><svg viewBox="-15 -15 30 30">${signIcon(code)}</svg></button>`).join('')}</div>`;
+    html+=`<div class="xnames">${(c.x||[]).map(signName).join(' · ')}</div>`;
+  }
+  pop=document.createElement('div'); pop.className='pop'; pop.innerHTML=html;
+  stage.appendChild(pop);
+  // position
+  const r=board.getBoundingClientRect(), sr=stage.getBoundingClientRect(), sc=r.width/800;
+  let x=(anchor.x*sc)+(r.left-sr.left)+28, y=(anchor.y*sc)+(r.top-sr.top)-pop.offsetHeight/2;
+  if(x+pop.offsetWidth>sr.width) x=(anchor.x*sc)-pop.offsetWidth-28;
+  x=Math.max(4,Math.min(x,sr.width-pop.offsetWidth-4)); y=Math.max(4,Math.min(y,sr.height-pop.offsetHeight-4));
+  pop.style.left=x+'px'; pop.style.top=y+'px';
+  pop.addEventListener('pointerdown',e=>e.stopPropagation());
+  pop.addEventListener('click',onPopClick);
+}
+function onPopClick(e){
+  const b=e.target.closest('[data-a]'); if(!b||b.disabled) return;
+  const a=b.dataset.a, v=b.dataset.v;
+  snapshot();
+  if(selected.type==='item'){
+    const it=S.items.find(i=>i.id===selected.id);
+    if(a==='man') it.man=v; else if(a==='color') it.color=v; else if(a==='signal') it.signal=v;
+    else if(a==='lights') it.lights=v==='1'; else if(a==='arrow') it.arrow=!it.arrow;
+    else if(a==='del'){ S.items=S.items.filter(i=>i!==it); selected=null; }
+  } else {
+    const c=S.ctl[selected.arm];
+    if(a==='ctl'){ c.t=v; } else if(a==='lc'){ c.c=v; }
+    else if(a==='panel'){ c.panel=!c.panel; if(c.panel && !S.prio) S.prio=defaultPrio(); }
+    else if(a==='x'){ const has=(c.x||[]).includes(v); c.x=EXTRAS.filter(k=> k===v ? !has : (c.x||[]).includes(k)); }
+    S.preset=detectPreset();
+  }
+  commit();
+}
+
+// ===================== presets =====================
+function presetCtl(p){
+  const o={}; const A=['s','w','n','e'];
+  for(const a of A) o[a]={t:'none',c:'g',panel:false,x:((S.ctl[a]||{}).x||[]).slice()};
+  if(p==='priority'){ const pr=S.prio||defaultPrio(), bend=!isStraightPair(pr); A.forEach(a=>{ o[a].t = pr.includes(a)?'prio':'yield'; o[a].panel=bend; }); }
+  if(p==='allstop') A.forEach(a=>o[a].t='stop');
+  if(p==='twostop'){ if(S.layout==='t') o.s.t='stop'; else { o.w.t='stop'; o.e.t='stop'; } }
+  if(p==='signals'){ A.forEach(a=>o[a].t='light'); if(S.layout==='t'){ o.s.c='r'; o.w.c='g'; o.e.c='g'; } else { o.s.c='g'; o.n.c='g'; o.w.c='r'; o.e.c='r'; } }
+  return o;
+}
+function detectPreset(){
+  for(const p of (S.prio?['priority']:[]).concat(['allstop','twostop','signals','none'])){
+    const o=presetCtl(p);
+    if(arms().every(a=>o[a].t===S.ctl[a].t && (o[a].t!=='light' || o[a].c===S.ctl[a].c))) return p;
+  }
+  return 'custom';
+}
+
+// ===================== encode / decode (for share links) =====================
+const CTL_CODE={none:'0',stop:'s',yield:'y',prio:'p',prioEnd:'q'};
+function encode(){
+  let h='d'+S.layout+(S.markings==='eu'?'e':'u')+({none:'n',num:'1',let:'a'}[S.labels]);
+  for(const a of ['s','w','n','e']){ const c=S.ctl[a]; h+= c.t==='light' ? (c.c==='y'?'a':c.c) : CTL_CODE[c.t]; }
+  const parts=[h];
+  const anyX=['s','w','n','e'].some(a=>S.ctl[a].panel||(S.ctl[a].x||[]).length);
+  if(S.prio||anyX){
+    let x='x'+(S.prio||'00');
+    for(const a of ['s','w','n','e']){ const c=S.ctl[a]; let m=0; (c.x||[]).forEach(k=>{ m|=1<<EXTRAS.indexOf(k); }); x+=(c.panel?'1':'0')+m.toString(16).padStart(4,'0'); }
+    parts.push(x);
+  }
+  for(const it of S.items){
+    const ci=Math.max(0,COLORS.indexOf(it.color));
+    const pedCol=['#7e57c2','#e5552e','#16a085','#f39c12'].indexOf(it.color);
+    parts.push(KINDS[it.kind].code+it.arm+(it.kind==='ped'?(it.end>0?'p':'m'):(it.side==='in'?'i':'o'))+String(it.dist||0).padStart(3,'0')
+      +({left:'l',straight:'s',right:'r',uturn:'u',cross:'c',wait:'w'}[it.man])
+      +(it.kind==='ped' && pedCol>=0 ? String.fromCharCode(97+pedCol) : String(ci))
+      +({auto:'a',none:'n',left:'l',right:'r',hazards:'h'}[it.signal])+(it.arrow?'1':'0')+(it.lights?'1':'0'));
+  }
+  return parts.join('-');
+}
+function decode(str){
+  const parts=str.split('-'), h=parts[0];
+  if(!h || h[0]!=='d' || h.length<8) return null;
+  const st=freshState();
+  st.layout=h[1]==='t'?'t':'4'; st.markings=h[2]==='u'?'us':'eu'; st.labels={n:'none','1':'num',a:'let'}[h[3]]||'none';
+  ['s','w','n','e'].forEach((a,i)=>{ const ch=h[4+i]; st.ctl[a]= 'rag'.includes(ch)?{t:'light',c:(ch==='a'?'y':ch),panel:false,x:[]}:{t:{'0':'none',s:'stop',y:'yield',p:'prio',q:'prioEnd'}[ch]||'none',c:'g',panel:false,x:[]}; });
+  for(const p of parts.slice(1)){
+    if(p[0]==='x' && p.length>=23){
+      const pr=p.slice(1,3); st.prio = pr==='00'?null:pr;
+      ['s','w','n','e'].forEach((a,i)=>{ const seg=p.slice(3+i*5,8+i*5); st.ctl[a].panel=seg[0]==='1'; const m=parseInt(seg.slice(1),16)||0; st.ctl[a].x=EXTRAS.filter((k,j)=>m&(1<<j)); });
+      continue;
+    }
+    if(p.length<11) continue;
+    const kind=KIND_BY_CODE[p[0]]; if(!kind) continue;
+    const it={id:st.nid++,kind,arm:p[1],side:p[2]==='o'?'out':'in',end:p[2]==='m'?-1:1,dist:+p.slice(3,6),
+      man:{l:'left',s:'straight',r:'right',u:'uturn',c:'cross',w:'wait'}[p[6]]||'straight',
+      color: /[a-d]/.test(p[7]) ? ['#7e57c2','#e5552e','#16a085','#f39c12'][p.charCodeAt(7)-97] : COLORS[+p[7]]||COLORS[0],
+      signal:{a:'auto',n:'none',l:'left',r:'right',h:'hazards'}[p[8]]||'auto',arrow:p[9]!=='0',lights:p[10]==='1'};
+    if(!ARM_DEG.hasOwnProperty(it.arm)) continue;
+    st.items.push(it);
+  }
+  const keep=S; S=st; st.preset=detectPreset(); S=keep;
+  return st;
+}
+
+// ===================== persistence =====================
+function saveLocal(){
+  const code=encode();
+  try{ localStorage.setItem('dd_state',code); }catch(e){}
+  try{ history.replaceState(null,'','#'+code); }catch(e){}
+}
+function loadInitial(){
+  let code = (location.hash||'').slice(1);
+  if(!code){ try{ code=localStorage.getItem('dd_state')||''; }catch(e){} }
+  if(code){ const st=decode(code); if(st) S=st; }
+  let l=null; try{ l=localStorage.getItem('dd_lang'); }catch(e){}
+  if(!l){ const n=(navigator.language||'sr').slice(0,2).toLowerCase(); l = I18N[n]? n : (n==='hr'||n==='bs'||n==='sh')?'sr':'sr'; }
+  lang=I18N[l]?l:'sr';
+  document.getElementById('lang').value=lang;
+}
+
+// ===================== export =====================
+function exportSVGString(){ return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">${renderSVG(true)}</svg>`; }
+function pngBlob(scale=2){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{ const c=document.createElement('canvas'); c.width=800*scale; c.height=600*scale; const x=c.getContext('2d'); x.drawImage(img,0,0,c.width,c.height); c.toBlob(b=>b?res(b):rej(),'image/png'); };
+    img.onerror=rej;
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(exportSVGString());
+  });
+}
+let downloadsApi=null;
+try{ if(window.claude && window.claude.use) window.claude.use('downloads').then(d=>{downloadsApi=d;}).catch(()=>{}); }catch(e){}
+async function download(fmt){
+  const name='dijagram-raskrsnice.'+fmt;
+  const data = fmt==='svg' ? exportSVGString() : await pngBlob(2);
+  if(downloadsApi){
+    try{ await downloadsApi.save({filename:name,data}); toast(t('saved')); }catch(e){ if(e && e.code!=='declined') toast(t('dlFail')); }
+    return;
+  }
+  try{
+    const blob = data instanceof Blob ? data : new Blob([data],{type:'image/svg+xml'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  }catch(e){ toast(t('dlFail')); }
+}
+async function copyImage(){
+  try{
+    if(!navigator.clipboard || !window.ClipboardItem) throw 0;
+    await navigator.clipboard.write([new ClipboardItem({'image/png':pngBlob(2)})]);
+    toast(t('copied'));
+  }catch(e){ toast(t('copyFail')); }
+}
+
+// ===================== solver =====================
+let solOpen=false, sol=null;
+function effLabels(exp){ return (solOpen && !exp) ? 'let' : S.labels; }
+const armLight=a=>{ const c=S.ctl[a]; return c && c.t==='light' ? c.c : null; };
+const isEm=v=>EMERGENCY.has(v.kind) && v.lights;
+const relDeg=(A,B)=>(ARM_DEG[B.arm]-ARM_DEG[A.arm]+360)%360;
+function levelInfo(){
+  const A=arms(), minor=a=>['stop','yield'].includes(S.ctl[a].t), lv={};
+  let high=null;
+  if(S.prio) high=S.prio.split('');
+  else if(A.some(a=>S.ctl[a].t==='prio')) high=A.filter(a=>S.ctl[a].t==='prio');
+  else if(A.some(minor) && !A.every(minor)) high=A.filter(a=>!minor(a));
+  A.forEach(a=>lv[a]= high ? (high.includes(a)?1:0) : 0);
+  return {lv, hasLevels:!!high, allMinor:A.every(minor)};
+}
+function pedGreen(X){
+  const sides=[relArm(X,90),relArm(X,270)].filter(a=>arms().includes(a));
+  const ls=sides.map(armLight).filter(Boolean), own=armLight(X);
+  if(!ls.length && !own) return null;
+  if(ls.length) return ls.includes('g') && own!=='g';
+  return own!=='g';
+}
+function inPhase(v){
+  if(v.kind==='ped') return pedGreen(v.arm)!==false;
+  if(isEm(v)) return true;
+  const l=armLight(v.arm); return !l || l==='g';
+}
+function movePts(v){
+  const pts=[], push=(x,y)=>pts.push(toWorld(v.arm,x,y)), L=20;
+  const seg=(x1,y1,x2,y2,n)=>{ for(let i=0;i<=n;i++) push(x1+(x2-x1)*i/n, y1+(y2-y1)*i/n); };
+  const quad=(x0,y0,cx,cy,x1,y1,n)=>{ for(let i=0;i<=n;i++){ const t=i/n,u=1-t; push(u*u*x0+2*u*t*cx+t*t*x1, u*u*y0+2*u*t*cy+t*t*y1); } };
+  if(v.kind==='ped'){ seg(v.end*44,52,-v.end*44,52,30); return pts; }
+  const m=v.man;
+  if(m==='straight') seg(L,64,L,-64,42);
+  else if(m==='right'){ seg(L,64,L,46,6); quad(L,46,L,L,46,L,12); seg(46,L,64,L,6); }
+  else if(m==='left'){ seg(L,64,L,40,8); quad(L,40,L,-L,-40,-L,26); seg(-40,-L,-64,-L,8); }
+  else { seg(L,64,L,30,10); for(let i=0;i<=20;i++){ const a=Math.PI*i/20; push(L*Math.cos(a),30-L*Math.sin(a)); } seg(-L,30,-L,64,10); }
+  return pts;
+}
+function conflict(A,B){
+  if(A.kind==='ped' && B.kind==='ped') return false;
+  if(A.kind!=='ped' && B.kind!=='ped'){
+    if(A.arm===B.arm) return false;
+    if(A.man==='left' && B.man==='left' && relDeg(A,B)===180) return false;
+    if(targetArm(A.arm,A.man)===targetArm(B.arm,B.man)) return true;
+  }
+  const pa=movePts(A), pb=movePts(B);
+  for(const p of pa) for(const q of pb) if(Math.abs(p.x-q.x)<9 && Math.abs(p.y-q.y)<9 && Math.hypot(p.x-q.x,p.y-q.y)<9) return true;
+  return false;
+}
+function virt(v,pr){
+  const P1=v.arm, P2=pr.replace(P1,''), T=targetArm(v.arm,v.man);
+  if(T===P2) return 'straight';
+  const off=(ARM_DEG[T]-ARM_DEG[P1]+360)%360, offM=(ARM_DEG[P2]-ARM_DEG[P1]+360)%360;
+  if(off===0) return 'uturn';
+  return off<offM ? 'left' : 'right';
+}
+function mustYield(A,B,ctx){
+  if(isEm(B) && !isEm(A)) return 'r_emerg';
+  if(isEm(A) && !isEm(B)) return null;
+  if(B.kind==='ped'){ if(A.kind==='ped') return null; return pedGreen(B.arm)===null ? 'r_ped' : 'r_pedTurn'; }
+  if(A.kind==='ped') return null;
+  const sig = armLight(A.arm) && armLight(B.arm);
+  if(!sig && ctx.hasLevels){
+    const da=ctx.lv[A.arm], db=ctx.lv[B.arm];
+    if(da<db) return 'r_level';
+    if(da>db) return null;
+    if(S.prio && da===1 && !isStraightPair(S.prio)){
+      const va=virt(A,S.prio), vb=virt(B,S.prio);
+      if(va==='uturn' && vb!=='uturn') return 'r_uturn';
+      if(va==='left' && (vb==='straight'||vb==='right')) return 'r_virt';
+      return null;
+    }
+  }
+  if(A.man==='uturn' && B.man!=='uturn') return 'r_uturn';
+  if(B.man==='uturn' && A.man!=='uturn') return null;
+  const rel=relDeg(A,B);
+  if(rel===180) return (A.man==='left' && (B.man==='straight'||B.man==='right')) ? 'r_left' : null;
+  if(rel===270) return 'r_right';
+  return null;
+}
+const FORBID={left:['ii26','ii43s','ii43r','ii43sr'],right:['ii261','ii43s','ii43l','ii43sl'],straight:['ii43l','ii43r'],uturn:['ii27','ii43s','ii43l','ii43r','ii43sr','ii43sl']};
+function solve(){
+  const all=S.items.filter(it=>arms().includes(it.arm));
+  const lab={}; all.forEach((it,i)=>lab[it.id]=labelText(i,'let'));
+  const ctx=levelInfo();
+  const P=[], excluded=[];
+  for(const it of all){
+    if(it.kind==='ped'){ if(it.man==='cross') P.push(it); else excluded.push([it,'n_pedWait']); }
+    else if(it.side==='in' && maneuverOK(it.arm,it.man)) P.push(it); else excluded.push([it,'n_out']);
+  }
+  const act=P.filter(inPhase), waiting=P.filter(v=>!inPhase(v));
+  const pred={}; act.forEach(v=>pred[v.id]=[]);
+  for(const A of act) for(const B of act){
+    if(A===B || !conflict(A,B)) continue;
+    const r=mustYield(A,B,ctx); if(r) pred[A.id].push({b:B,r});
+  }
+  // queues in the same lane
+  for(const arm of arms()){
+    const q=act.filter(v=>v.kind!=='ped' && v.arm===arm).sort((a,b)=>a.dist-b.dist);
+    for(let i=1;i<q.length;i++) pred[q[i].id].push({b:q[i-1],r:'r_queue'});
+  }
+  const done=new Set(), steps=[], dead={};
+  let rest=act.slice();
+  while(rest.length){
+    let wave=rest.filter(v=>pred[v.id].every(p=>done.has(p.b.id)||p.ignored));
+    if(!wave.length){
+      const pick=rest.slice().sort((a,b)=>pred[a.id].filter(p=>!done.has(p.b.id)).length-pred[b.id].filter(p=>!done.has(p.b.id)).length || all.indexOf(a)-all.indexOf(b))[0];
+      pred[pick.id].forEach(p=>{ if(!done.has(p.b.id) && p.r!=='r_queue') p.ignored=true; });
+      if(pred[pick.id].some(p=>!done.has(p.b.id)&&!p.ignored)){ pred[pick.id].forEach(p=>{ if(!done.has(p.b.id)) p.ignored=true; }); }
+      dead[pick.id]=true; wave=[pick];
+    }
+    steps.push(wave); wave.forEach(v=>done.add(v.id)); rest=rest.filter(v=>!done.has(v.id));
+  }
+  const stepOf={}; steps.forEach((w,i)=>w.forEach(v=>stepOf[v.id]=i+1)); waiting.forEach(v=>stepOf[v.id]='w');
+  let reg = arms().some(armLight) ? 'reg_light' : ctx.hasLevels ? 'reg_signs' : ctx.allMinor ? 'reg_all' : 'reg_none';
+  return {steps,waiting,excluded,pred,lab,ctx,stepOf,reg,dead,count:P.length};
+}
+function who(v,lab){
+  const k=t(v.kind);
+  if(v.kind==='ped') return `${lab[v.id]} – ${k}, ${t('appr_'+v.arm)}, ${t('crossing').toLowerCase()}`;
+  return `${lab[v.id]} – ${k}, ${t('appr_'+v.arm)}, ${t(v.man).toLowerCase()}`;
+}
+function notesFor(v,R,active){
+  const out=[];
+  if(EMERGENCY.has(v.kind) && !v.lights && v.kind!=='ped') out.push(t('n_noLights'));
+  if(v.kind!=='ped' && S.ctl[v.arm].t==='stop') out.push(t('n_stopS'));
+  if(v.kind!=='ped'){ const f=(FORBID[v.man]||[]).find(x=>(S.ctl[v.arm].x||[]).includes(x)); if(f) out.push(`<span class="warn">${t('n_forb').replace('{s}',t('n_'+f))}</span>`); }
+  return out;
+}
+function renderSolution(){
+  const body=document.getElementById('solBody');
+  const R=sol; if(!R) return;
+  if(!R.count){ body.innerHTML=`<p>${t('noUsers')}</p>`; return; }
+  const esc=x=>x;
+  let h=`<div class="reg">${t(R.reg)}</div>`;
+  R.steps.forEach((w,i)=>{
+    h+=`<div class="step"><div class="num">${i+1}</div><div style="flex:1">`;
+    if(w.length>1) h+=`<div class="tog">${w.map(v=>R.lab[v.id]).join(' + ')} – ${t('together')}</div>`;
+    for(const v of w){
+      const pr=R.pred[v.id].filter(p=>!p.ignored);
+      const li=[];
+      if(R.dead[v.id]) li.push(t('n_deadlock').replace('{a}',R.lab[v.id]));
+      if(pr.length){ li.push(`<b>${t('yieldsTo')}</b>`); pr.forEach(p=>{ const x=t(p.r).replace('{b}',R.lab[p.b.id]); li.push(x.charAt(0).toUpperCase()+x.slice(1)); }); }
+      else if(!R.dead[v.id]){
+        li.push(t('free'));
+        if(isEm(v)) li.push(t('p_emerg'));
+        else if(v.kind==='ped') li.push(t('p_ped'));
+        else if(armLight(v.arm)==='g') li.push(t('p_green'));
+        else if(R.ctx.hasLevels && R.ctx.lv[v.arm]===1) li.push(t('p_main'));
+      }
+      notesFor(v).forEach(n=>li.push(n));
+      h+=`<div class="ent"><div class="who">${who(v,R.lab)}</div><ul>${li.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+    }
+    h+=`</div></div>`;
+  });
+  if(R.waiting.length){
+    h+=`<h5>${t('waitGreen')}</h5>`;
+    R.waiting.forEach(v=>{ const l=armLight(v.arm); const n= v.kind==='ped'?t('n_pedRed'): l==='y'?t('n_amber'):t('n_red');
+      h+=`<div class="ent"><div class="who">${who(v,R.lab)}</div><ul><li>${n}</li></ul></div>`; });
+  }
+  if(R.excluded.length){
+    h+=`<h5>${t('notIncl')}</h5><div class="ent"><ul>${R.excluded.map(([v,k])=>`<li>${R.lab[v.id]} – ${t(v.kind)}: ${t(k)}</li>`).join('')}</ul></div>`;
+  }
+  h+=`<div class="disc">${t('disc')}</div>`;
+  body.innerHTML=h;
+}
+function setSol(open){
+  solOpen=open; document.getElementById('solPanel').hidden=!open;
+  document.getElementById('solBtn').classList.toggle('on',open);
+  if(open){ selected=null; }
+  render();
+}
+
+// ===================== misc UI =====================
+let toastT;
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2200); }
+function closeMenus(){ document.getElementById('dlMenu').hidden=true; }
+
+document.querySelectorAll('#layoutSeg button').forEach(b=>b.addEventListener('click',()=>{
+  if(S.layout===b.dataset.v) return;
+  snapshot(); S.layout=b.dataset.v; S.items=S.items.filter(i=>arms().includes(i.arm));
+  if(S.prio && !PRIO_PAIRS[S.layout].includes(S.prio)) S.prio=defaultPrio();
+  S.items.forEach(it=>{ if(it.kind!=='ped'&&it.side==='in'&&!maneuverOK(it.arm,it.man)) it.man=['straight','right','left','uturn'].find(m=>maneuverOK(it.arm,m)); });
+  if(S.preset!=='custom') S.ctl=presetCtl(S.preset); else S.preset=detectPreset();
+  selected=null; commit();
+}));
+document.getElementById('preset').addEventListener('change',e=>{ snapshot(); S.preset=e.target.value; S.prio = S.preset==='priority' ? (S.prio||defaultPrio()) : null; S.ctl=presetCtl(S.preset); commit(); });
+document.getElementById('prioDir').addEventListener('change',e=>{ snapshot(); S.prio=e.target.value; S.preset='priority'; S.ctl=presetCtl('priority'); commit(); });
+document.getElementById('markings').addEventListener('change',e=>{ snapshot(); S.markings=e.target.value; commit(); });
+document.getElementById('labels').addEventListener('change',e=>{ snapshot(); S.labels=e.target.value; commit(); });
+document.getElementById('lang').addEventListener('change',e=>{ lang=e.target.value; try{localStorage.setItem('dd_lang',lang);}catch(_){} applyI18n(); });
+document.getElementById('undo').onclick=undo;
+document.getElementById('solBtn').onclick=()=>setSol(!solOpen);
+document.getElementById('solClose').onclick=()=>setSol(false);
+document.getElementById('redo').onclick=redo;
+document.getElementById('clear').onclick=()=>{ if(!S.items.length && S.preset==='none') return; snapshot(); const keep={layout:S.layout,markings:S.markings,labels:S.labels}; S=Object.assign(freshState(),keep); selected=null; commit(); };
+document.getElementById('copy').onclick=copyImage;
+document.getElementById('dl').onclick=e=>{ e.stopPropagation(); const m=document.getElementById('dlMenu'); m.hidden=!m.hidden; };
+document.querySelectorAll('#dlMenu button').forEach(b=>b.onclick=()=>{ closeMenus(); download(b.dataset.f); });
+document.getElementById('share').onclick=()=>{
+  saveLocal();
+  let base=location.href.split('#')[0];
+  try{ if(window.top!==window.self || !/^https?:/.test(location.protocol)) base='https://claude.ai/artifact/1qcPPfiB7VB6mUQfRuuxg2'; }catch(_){ base='https://claude.ai/artifact/1qcPPfiB7VB6mUQfRuuxg2'; }
+  const url=base+'#'+encode();
+  document.getElementById('shareInput').value=url;
+  document.getElementById('shareModal').classList.add('show');
+  setTimeout(()=>document.getElementById('shareInput').select(),50);
+};
+document.getElementById('shareCopy').onclick=async()=>{
+  const v=document.getElementById('shareInput').value;
+  try{ await navigator.clipboard.writeText(v); toast(t('linkCopied')); }catch(e){ document.getElementById('shareInput').select(); try{ document.execCommand('copy'); toast(t('linkCopied')); }catch(_){} }
+};
+document.getElementById('helpBtn').onclick=()=>document.getElementById('helpModal').classList.add('show');
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m||e.target.closest('[data-close]')) m.classList.remove('show'); }));
+document.addEventListener('click',e=>{ if(!e.target.closest('#dl')) closeMenus(); });
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('input,select,textarea')) return;
+  const mod=e.ctrlKey||e.metaKey;
+  if(mod && e.key.toLowerCase()==='z' && !e.shiftKey){ e.preventDefault(); undo(); }
+  else if(mod && (e.key.toLowerCase()==='y' || (e.key.toLowerCase()==='z'&&e.shiftKey))){ e.preventDefault(); redo(); }
+  else if((e.key==='Delete'||e.key==='Backspace') && selected && selected.type==='item'){ snapshot(); S.items=S.items.filter(i=>i.id!==selected.id); selected=null; commit(); }
+  else if(e.key==='Escape'){ selected=null; render(); document.querySelectorAll('.modal').forEach(m=>m.classList.remove('show')); }
+});
+window.addEventListener('resize',()=>{ if(selected) renderPop(); });
+window.addEventListener('hashchange',()=>{ const code=location.hash.slice(1); if(code && code!==encode()){ const st=decode(code); if(st){ S=st; selected=null; render(); } } });
+
+loadInitial();
+applyI18n();
+</script>
+</body>
+</html>
