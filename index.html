@@ -10,6 +10,17 @@
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 body{display:flex;flex-direction:column;min-height:100vh}
 header,footer{background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:8px 14px;flex-wrap:wrap}
+header{flex-wrap:nowrap;gap:10px;overflow-x:auto}
+header>*{flex:none}
+header .actions{margin-left:auto;display:flex;gap:8px}
+header .brand{margin-right:4px !important}
+#preset{max-width:250px;text-overflow:ellipsis}
+#prioDir{max-width:160px;text-overflow:ellipsis}
+.seg button{padding:5px 10px}
+header .ib{width:30px;height:32px}
+@media (max-width:1750px){ header .lbl{display:none} }
+@media (max-width:1600px){ header .brand span{display:none} }
+@media (max-width:1250px){ header{gap:7px;padding:8px 10px} .seg button{padding:5px 8px;font-size:11px} header select{font-size:11px;padding:5px 6px} #preset{max-width:150px} #prioDir{max-width:120px} header .actions .btn{padding:7px 9px;font-size:11px} header .ib{width:28px} }
 footer{border-top:1px solid var(--line);border-bottom:none;flex-wrap:nowrap;gap:12px;overflow-x:auto}
 footer .grp{flex:none}
 footer .sepv{width:1px;height:24px;background:var(--line);flex:none}
@@ -127,8 +138,6 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;p
     </select>
     <select id="prioDir" hidden></select>
   </div>
-  <button class="btn propbtn" id="propBtn" data-t="propose"></button>
-  <button class="btn solbtn" id="solBtn" data-t="solve"></button>
   <div class="icons">
     <button class="ib" id="undo" data-tt="undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
     <button class="ib" id="redo" data-tt="redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
@@ -143,9 +152,10 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;p
     <button class="ib" id="clear" data-tt="clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 15h10l1-15"/></svg></button>
     <div class="sep"></div>
     <select class="lang" id="lang">
-      <option value="sr">Srpski</option><option value="mk">Македонски</option><option value="bg">Български</option><option value="ro">Română</option><option value="en">English</option>
+      <option value="sr" title="Srpski">SR</option><option value="mk" title="Македонски">MK</option><option value="bg" title="Български">BG</option><option value="ro" title="Română">RO</option><option value="en" title="English">EN</option>
     </select>
   </div>
+  <div class="actions"><button class="btn propbtn" id="propBtn" data-t="propose"></button><button class="btn solbtn" id="solBtn" data-t="solve"></button></div>
 </header>
 <main>
   <div id="stage"><svg id="board" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg"></svg></div>
@@ -850,7 +860,7 @@ function render(){
   document.getElementById('preset').value=S.preset;
   const pd=document.getElementById('prioDir');
   pd.hidden = !S.prio;
-  if(S.prio){ pd.innerHTML=PRIO_PAIRS[S.layout].map(p=>`<option value="${p}">${t('prioDir')}: ${t('dir_'+p[0])} – ${t('dir_'+p[1])}</option>`).join(''); pd.value=S.prio; }
+  if(S.prio){ pd.innerHTML=PRIO_PAIRS[S.layout].map(p=>`<option value="${p}">${t('dir_'+p[0])} – ${t('dir_'+p[1])}</option>`).join(''); pd.value=S.prio; pd.title=t('prioDir'); }
   document.getElementById('markings').value=S.markings;
   document.getElementById('labels').value=S.labels;
   document.getElementById('hint').style.visibility = S.items.length ? 'hidden':'visible';
