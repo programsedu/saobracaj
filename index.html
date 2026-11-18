@@ -105,7 +105,8 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;
     <span data-t="title"></span>
   </div>
   <div class="grp"><span class="lbl" data-t="layout"></span>
-    <div class="seg" id="layoutSeg"><button data-v="4" data-t="fourway"></button><button data-v="t">T</button></div>
+    <div class="seg" id="layoutSeg"><button data-v="4" data-t="fourway"></button><button data-v="t">T</button><button data-v="r" data-t="ringLayout"></button></div>
+    <select id="rlanes" hidden><option value="2" data-t="lanes2"></option><option value="3" data-t="lanes3"></option></select>
   </div>
   <div class="grp"><span class="lbl" data-t="controls"></span>
     <select id="preset">
@@ -114,6 +115,7 @@ main{flex:1;display:flex;align-items:center;justify-content:center;padding:14px;
       <option value="signals" data-t="signals"></option>
       <option value="none" data-t="uncontrolled"></option>
       <option value="priority" data-t="prioPreset"></option>
+      <option value="ring" data-t="ringPreset"></option>
       <option value="custom" data-t="custom" disabled></option>
     </select>
     <select id="prioDir" hidden></select>
@@ -379,14 +381,67 @@ const I18N4={
   deadNote:"În această situație există un blocaj – programul a ales o ordine posibilă, iar o altă alegere a celui care pornește primul poate fi și ea acceptabilă.",changed:"Diagrama s-a schimbat – apasă din nou Verifică."}
 };
 for(const l in I18N4) Object.assign(I18N[l],I18N4[l]);
+const I18N5={
+ sr:{ringLayout:"Kružni tok",lanes2:"2 trake",lanes3:"3 trake",ringPreset:"Kružni tok (ustupi na ulazu)",inRing:"u kružnom toku",
+  lane0:"spoljna traka",lane1:"srednja traka",lane1b:"unutrašnja traka",lane2:"unutrašnja traka",ex1:"1. izlaz",ex2:"2. izlaz",ex3:"3. izlaz",ex4:"4. izlaz (polukružno)",
+  n_ii452:"Kružni tok saobraćaja",n_i30:"Raskrsnica sa kružnim tokom saobraćaja",
+  r_ringIn:"ulazi u kružni tok (znak „ustupanje prvenstva prolaza”), pa propušta {b}, koji se već kreće kružnim tokom",
+  r_ringNoSign:"na ulazu nema znaka, pa važi pravilo desne strane – {b} ulazi u kružni tok sa njegove desne strane",
+  r_ringAhead:"{b} ulazi u kružni tok na mestu kroz koje on tek treba da prođe",
+  r_ringLane:"izlazi iz unutrašnje trake, pa propušta {b}, koji nastavlja kretanje spoljašnjom trakom",
+  p_ring:"Već se kreće kružnim tokom.",
+  reg_ring:"Raskrsnica sa kružnim tokom: na ulazima je znak „ustupanje prvenstva prolaza”, pa vozila koja se već kreću kružnim tokom imaju prednost u odnosu na vozila koja ulaze. U kružnom toku sa više traka prednost ima vozilo koje nastavlja kretanje svojom trakom u odnosu na vozilo koje iz unutrašnje trake izlazi.",
+  reg_ringNone:"Kružni tok bez znakova: važi pravilo desne strane, pa vozila koja ulaze imaju prednost u odnosu na vozila u kružnom toku."},
+ en:{ringLayout:"Roundabout",lanes2:"2 lanes",lanes3:"3 lanes",ringPreset:"Roundabout (give way on entry)",inRing:"in the roundabout",
+  lane0:"outer lane",lane1:"middle lane",lane1b:"inner lane",lane2:"inner lane",ex1:"1st exit",ex2:"2nd exit",ex3:"3rd exit",ex4:"4th exit (U-turn)",
+  n_ii452:"Roundabout",n_i30:"Roundabout ahead",
+  r_ringIn:"it enters the roundabout (give-way sign), so it gives way to {b}, which is already circulating",
+  r_ringNoSign:"there is no sign at the entry, so the right-hand rule applies – {b} enters from its right",
+  r_ringAhead:"{b} enters the roundabout at a point it still has to pass",
+  r_ringLane:"it leaves from the inner lane, so it gives way to {b}, which continues in the outer lane",
+  p_ring:"It is already circulating in the roundabout.",
+  reg_ring:"Roundabout: there is a give-way sign at the entries, so vehicles already in the roundabout have priority over entering vehicles. In a multi-lane roundabout, a vehicle continuing in its lane has priority over a vehicle leaving from the inner lane.",
+  reg_ringNone:"Roundabout without signs: the right-hand rule applies, so entering vehicles have priority over vehicles in the roundabout."},
+ mk:{ringLayout:"Кружен тек",lanes2:"2 ленти",lanes3:"3 ленти",ringPreset:"Кружен тек (отстапи на влез)",inRing:"во кружниот тек",
+  lane0:"надворешна лента",lane1:"средна лента",lane1b:"внатрешна лента",lane2:"внатрешна лента",ex1:"1. излез",ex2:"2. излез",ex3:"3. излез",ex4:"4. излез (полукружно)",
+  n_ii452:"Кружен тек на сообраќајот",n_i30:"Раскрсница со кружен тек на сообраќајот",
+  r_ringIn:"влегува во кружниот тек (знак „отстапување на првенство“), па го пропушта {b}, кое веќе се движи во кружниот тек",
+  r_ringNoSign:"на влезот нема знак, па важи правилото на десна страна – {b} влегува од неговата десна страна",
+  r_ringAhead:"{b} влегува во кружниот тек на место низ кое тоа допрва треба да помине",
+  r_ringLane:"излегува од внатрешната лента, па го пропушта {b}, кое продолжува по надворешната лента",
+  p_ring:"Веќе се движи во кружниот тек.",
+  reg_ring:"Раскрсница со кружен тек: на влезовите има знак „отстапување на првенство“, па возилата што веќе се движат во кружниот тек имаат предност пред возилата што влегуваат. Во кружен тек со повеќе ленти предност има возилото што продолжува по својата лента пред возилото што излегува од внатрешната лента.",
+  reg_ringNone:"Кружен тек без знаци: важи правилото на десна страна, па возилата што влегуваат имаат предност пред возилата во кружниот тек."},
+ bg:{ringLayout:"Кръгово движение",lanes2:"2 ленти",lanes3:"3 ленти",ringPreset:"Кръгово (пропусни на входа)",inRing:"в кръговото движение",
+  lane0:"външна лента",lane1:"средна лента",lane1b:"вътрешна лента",lane2:"вътрешна лента",ex1:"1. изход",ex2:"2. изход",ex3:"3. изход",ex4:"4. изход (обратен завой)",
+  n_ii452:"Кръгово движение",n_i30:"Кръстовище с кръгово движение",
+  r_ringIn:"влиза в кръговото движение (знак „Пропусни“), затова пропуска {b}, което вече се движи в кръга",
+  r_ringNoSign:"на входа няма знак, затова важи правилото на дясната страна – {b} влиза отдясно",
+  r_ringAhead:"{b} влиза в кръговото движение в точка, през която то тепърва ще мине",
+  r_ringLane:"излиза от вътрешната лента, затова пропуска {b}, което продължава по външната лента",
+  p_ring:"Вече се движи в кръговото движение.",
+  reg_ring:"Кръгово движение: на входовете има знак „Пропусни“, затова превозните средства в кръга имат предимство пред влизащите. При кръгово движение с няколко ленти предимство има продължаващият в лентата си пред излизащия от вътрешната лента.",
+  reg_ringNone:"Кръгово движение без знаци: важи правилото на дясната страна, затова влизащите имат предимство пред тези в кръга."},
+ ro:{ringLayout:"Sens giratoriu",lanes2:"2 benzi",lanes3:"3 benzi",ringPreset:"Sens giratoriu (cedează la intrare)",inRing:"în sensul giratoriu",
+  lane0:"banda exterioară",lane1:"banda din mijloc",lane1b:"banda interioară",lane2:"banda interioară",ex1:"ieșirea 1",ex2:"ieșirea 2",ex3:"ieșirea 3",ex4:"ieșirea 4 (întoarcere)",
+  n_ii452:"Sens giratoriu",n_i30:"Intersecție cu sens giratoriu",
+  r_ringIn:"intră în sensul giratoriu (indicator Cedează trecerea), deci cedează lui {b}, care circulă deja în giratoriu",
+  r_ringNoSign:"la intrare nu există indicator, deci se aplică prioritatea de dreapta – {b} intră din dreapta lui",
+  r_ringAhead:"{b} intră în giratoriu într-un punct prin care el abia urmează să treacă",
+  r_ringLane:"iese de pe banda interioară, deci cedează lui {b}, care continuă pe banda exterioară",
+  p_ring:"Circulă deja în sensul giratoriu.",
+  reg_ring:"Sens giratoriu: la intrări este indicatorul Cedează trecerea, deci vehiculele aflate deja în giratoriu au prioritate față de cele care intră. Într-un giratoriu cu mai multe benzi are prioritate vehiculul care continuă pe banda sa față de cel care iese de pe banda interioară.",
+  reg_ringNone:"Sens giratoriu fără indicatoare: se aplică prioritatea de dreapta, deci vehiculele care intră au prioritate față de cele din giratoriu."}
+};
+for(const l in I18N5) Object.assign(I18N[l],I18N5[l]);
 I18N.en.helpText+=" In Controls, “Priority road” lets you choose the main road – it can also turn at the intersection, and the supplementary panel then shows its direction.";
 I18N.sr.helpText+=" U Regulisanju opcija „Put sa prvenstvom prolaza” omogućava da izabereš glavni put – on može i da skreće u raskrsnici, a dopunska tabla tada prikazuje njegov pravac.";
 I18N.mk.helpText+=" Во Регулирање, опцијата „Пат со првенство на минување“ ти овозможува да го избереш главниот пат – тој може и да свртува во раскрсницата, а дополнителната табла тогаш го покажува неговиот правец.";
 I18N.bg.helpText+=" В Регулиране опцията „Път с предимство“ позволява да изберете главния път – той може и да завива в кръстовището, а допълнителната табела тогава показва посоката му.";
 I18N.ro.helpText+=" La Semnalizare, opțiunea „Drum cu prioritate” îți permite să alegi drumul principal – acesta poate și să vireze în intersecție, iar panoul adițional îi arată atunci direcția.";
-const SR_CODE={stop:'II-2',yield:'II-1',prio:'III-3',prioEnd:'III-3.1',light:'',panel:'IV-23',i26:'I-26',i27:'I-27',i28:'I-28',i20:'I-20',i14:'I-14',iii6:'III-6',ii26:'II-26',ii261:'II-26.1',ii27:'II-27',ii43s:'II-43',ii43l:'II-43',ii43r:'II-43',ii43sr:'II-43',ii43sl:'II-43'};
-const EXTRAS=['i26','i27','i28','i20','i14','iii6','ii26','ii261','ii27','ii43s','ii43l','ii43r','ii43sr','ii43sl'];
-const PRIO_PAIRS={'4':['sn','we','sw','se','wn','ne'],'t':['we','sw','se']};
+const SR_CODE={stop:'II-2',yield:'II-1',prio:'III-3',prioEnd:'III-3.1',light:'',panel:'IV-23',i26:'I-26',i27:'I-27',i28:'I-28',i20:'I-20',i14:'I-14',iii6:'III-6',ii26:'II-26',ii261:'II-26.1',ii27:'II-27',ii43s:'II-43',ii43l:'II-43',ii43r:'II-43',ii43sr:'II-43',ii43sl:'II-43',ii452:'II-45.2',i30:'I-30'};
+const EXTRAS=['i26','i27','i28','i20','i14','iii6','ii26','ii261','ii27','ii43s','ii43l','ii43r','ii43sr','ii43sl','ii452','i30'];
+const PRIO_PAIRS={'4':['sn','we','sw','se','wn','ne'],'t':['we','sw','se'],'r':['sn','we','sw','se','wn','ne']};
 let lang = 'sr';
 const t = k => (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
 const signName = code => t('n_'+code) + (lang==='sr' && SR_CODE[code] ? ` (${SR_CODE[code]})` : '');
@@ -401,6 +456,7 @@ const KINDS = {
   car:{hl:22,w:22,code:'c'}, ambulance:{hl:27,w:24,code:'a'}, fire:{hl:34,w:25,code:'f'},
   police:{hl:22,w:22,code:'p'}, bus:{hl:38,w:25,code:'b'}, bike:{hl:14,w:12,code:'k'}, ped:{hl:8,w:16,code:'w'}
 };
+for(const k in KINDS){ KINDS[k].hl0=KINDS[k].hl; KINDS[k].w0=KINDS[k].w; KINDS[k].hl*=1.3; KINDS[k].w*=1.3; }
 const KIND_BY_CODE = Object.fromEntries(Object.entries(KINDS).map(([k,v])=>[v.code,k]));
 const EMERGENCY = new Set(['ambulance','fire','police']);
 const TREES = {
@@ -411,13 +467,22 @@ const TREES = {
 
 // ===================== state =====================
 const blankCtl=()=>({t:'none',c:'g',panel:false,x:[]});
-function freshState(){ return {layout:'4',markings:'eu',labels:'none',preset:'none',prio:null,ctl:{s:blankCtl(),w:blankCtl(),n:blankCtl(),e:blankCtl()},items:[],nid:1}; }
+function freshState(){ return {rlanes:2,layout:'4',markings:'eu',labels:'none',preset:'none',prio:null,ctl:{s:blankCtl(),w:blankCtl(),n:blankCtl(),e:blankCtl()},items:[],nid:1}; }
 const defaultPrio=()=> S.layout==='t'?'we':'sn';
 const isStraightPair=p=>p==='sn'||p==='we';
 let S = freshState();
 let undoStack=[], redoStack=[];
 let selected=null;          // {type:'item',id} | {type:'slot',arm}
 const arms = () => S.layout==='t' ? ['s','w','e'] : ['s','w','n','e'];
+const isRing = () => S.layout==='r';
+const RING={2:{r0:66,outer:140},3:{r0:44,outer:152}};
+function ringGeo(){ const n=S.rlanes===3?3:2, g=RING[n]; return {r0:g.r0,outer:g.outer,lanes:n,lw:(g.outer-g.r0)/n}; }
+const OF = () => isRing() ? ringGeo().outer-38 : 0;
+const laneR = i => { const g=ringGeo(); return g.outer-g.lw*(i+0.5); };
+const onBoard = it => arms().includes(it.arm) || (isRing() && it.arm==='o');
+const AANG={s:90,e:0,n:270,w:180};
+const EXN={right:1,straight:2,left:3,uturn:4};
+const SC=1.3;
 
 function snapshot(){ undoStack.push(JSON.stringify(S)); if(undoStack.length>200) undoStack.shift(); redoStack=[]; }
 function undo(){ if(!undoStack.length) return; redoStack.push(JSON.stringify(S)); S=JSON.parse(undoStack.pop()); selected=null; commit(false); }
@@ -429,32 +494,46 @@ function toWorld(arm,lx,ly){ const a=rad(ARM_DEG[arm]),c=Math.cos(a),s=Math.sin(
 function toLocal(arm,wx,wy){ const a=rad(ARM_DEG[arm]),c=Math.cos(a),s=Math.sin(a),x=wx-C.x,y=wy-C.y; return {x:x*c+y*s, y:-x*s+y*c}; }
 function relArm(arm,off){ return DEG_ARM[(ARM_DEG[arm]+off)%360]; }
 function targetArm(arm,m){ return m==='left'?relArm(arm,90):m==='straight'?relArm(arm,180):m==='right'?relArm(arm,270):arm; }
-function maneuverOK(arm,m){ return arms().includes(targetArm(arm,m)); }
+function maneuverOK(arm,m){ return isRing() || arms().includes(targetArm(arm,m)); }
 const laneX = it => (it.kind==='bike'?30:20);
 
 function itemLocal(it){
-  if(it.kind==='ped') return {x:it.end*56, y:52, ang: it.end>0?270:90};
+  if(it.kind==='ped') return {x:it.end*56, y:52+OF(), ang: it.end>0?270:90};
   const lx = laneX(it);
   return it.side==='in' ? {x:lx,y:it.dist,ang:0} : {x:-lx,y:it.dist,ang:180};
 }
 
+function itemWorld(it){
+  if(it.arm==='o'){ const r=laneR(it.lane), a=rad(it.ang); return {x:C.x+r*Math.cos(a), y:C.y+r*Math.sin(a), ang:it.ang}; }
+  const p=itemLocal(it), w=toWorld(it.arm,p.x,p.y); return {x:w.x,y:w.y,ang:p.ang+ARM_DEG[it.arm]};
+}
+function frameToWorld(it,fx,fy){ const w=itemWorld(it), a=rad(w.ang); return {x:w.x+fx*Math.cos(a)-fy*Math.sin(a), y:w.y+fx*Math.sin(a)+fy*Math.cos(a)}; }
 function snapItem(kind,wx,wy){
-  let best=null;
+  let best=null; const of=OF();
+  if(isRing() && kind!=='ped'){
+    const g=ringGeo(), rr=Math.hypot(wx-C.x,wy-C.y);
+    if(rr>g.r0-6 && rr<g.outer+4){
+      const lane=Math.max(0,Math.min(g.lanes-1,Math.floor((g.outer-rr)/g.lw)));
+      let ang=Math.round(Math.atan2(wy-C.y,wx-C.x)*180/Math.PI); ang=(ang+360)%360;
+      return {ring:true,lane,ang};
+    }
+  }
   for(const arm of arms()){
-    const L=toLocal(arm,wx,wy), len=ARM_LEN[arm];
+    const L=toLocal(arm,wx,wy), len=ARM_LEN[arm], Ly=L.y-of;
     if(kind==='ped'){
       for(const end of [1,-1]){
-        const d=Math.hypot(L.x-end*56,L.y-52);
+        const d=Math.hypot(L.x-end*56,L.y-52-of);
         if(d<70 && (!best||d<best.d)) best={d,arm,end};
       }
       continue;
     }
-    if(L.y<36 || L.y>len+30 || Math.abs(L.x)>62) continue;
+    if(Ly<36 || L.y>len+30 || Math.abs(L.x)>62) continue;
     const hl=KINDS[kind].hl, side=L.x>=0?'in':'out';
     const lx = kind==='bike'?30:20;
-    const min = side==='in'? 70+hl : 46+hl;
-    const dist=Math.round(Math.max(min,Math.min(len-hl+6,L.y)));
-    const d=Math.abs(Math.abs(L.x)-lx)+Math.max(0,40-L.y);
+    const min = of + (side==='in'? 70+hl : 46+hl), max=len-hl+6;
+    if(min>max) continue;
+    const dist=Math.round(Math.max(min,Math.min(max,L.y)));
+    const d=Math.abs(Math.abs(L.x)-lx)+Math.max(0,40-Ly);
     if(!best||d<best.d) best={d,arm,side,dist};
   }
   return best;
@@ -502,13 +581,16 @@ function sprite(kind,color,opts={}){
 function signalLights(it,exp){
   if(it.kind==='bike'||it.kind==='ped') return '';
   let s=it.signal;
-  if(s==='auto') s = it.side!=='in' ? 'none' : (it.man==='left'||it.man==='uturn')?'left':it.man==='right'?'right':'none';
+  if(s==='auto'){
+    if(isRing() && (it.arm==='o' || it.side==='in')) s = it.man==='right' ? 'right' : 'none';
+    else s = it.side!=='in' ? 'none' : (it.man==='left'||it.man==='uturn')?'left':it.man==='right'?'right':'none';
+  }
   if(s==='none') return '';
   const k=KINDS[it.kind], cls=exp?'':'class="blink"';
   const dot=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.2" fill="#ffb300" stroke="#fff3c4" stroke-width="1" ${cls}/>`;
   let out='';
   const sides = s==='hazards'?[-1,1]: s==='left'?[-1]:[1];
-  for(const sd of sides){ out+=dot(sd*(k.w/2-1),-k.hl+3)+dot(sd*(k.w/2-1),k.hl-3); }
+  for(const sd of sides){ out+=dot(sd*(k.w0/2-1),-k.hl0+3)+dot(sd*(k.w0/2-1),k.hl0-3); }
   return out;
 }
 function arrowHead(x,y,dx,dy,col){
@@ -520,7 +602,8 @@ function pathFor(it){
   let d,end;
   if(it.kind==='ped'){
     if(it.man!=='cross') return '';
-    d=`M${it.end*44} 52 L${-it.end*40} 52`; end=[-it.end*40,52,-it.end,0];
+    const py=52+OF();
+    d=`M${it.end*44} ${py} L${-it.end*40} ${py}`; end=[-it.end*40,py,-it.end,0];
   } else {
     const k=KINDS[it.kind], lx=laneX(it);
     if(it.side==='out'){
@@ -539,6 +622,38 @@ function pathFor(it){
   }
   return `<path d="${d}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
     <path d="${d}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${arrowHead(end[0],end[1],end[2],end[3],col)}`;
+}
+function ringExit(startAng,k){
+  const list=Object.entries(AANG).map(([a,ang])=>{ let d=((startAng-ang)%360+360)%360; if(d<10) d+=360; return [a,d]; }).sort((x,y)=>x[1]-y[1]);
+  return list[Math.max(0,Math.min(3,k-1))];
+}
+function ringLaneFor(man){ const n=ringGeo().lanes, k=EXN[man]||2; return n===2 ? (k<=2?0:1) : (k===1?0:k===2?1:2); }
+function ringPts(it){
+  const g=ringGeo(), pts=[], k=KINDS[it.kind], P=(x,y)=>pts.push({x,y});
+  const arc=(r,a0,a1)=>{ const n=Math.max(3,Math.ceil(Math.abs(a0-a1)/4)); for(let i=0;i<=n;i++){ const a=rad(a0-(a0-a1)*i/n); P(C.x+r*Math.cos(a),C.y+r*Math.sin(a)); } };
+  const out=(X)=>{ const a=toWorld(X,-20,g.outer+6), b=toWorld(X,-20,g.outer+72); P(a.x,a.y); P(b.x,b.y); };
+  if(it.arm==='o'){
+    const r=laneR(it.lane), a0=it.ang-(k.hl+3)/r*180/Math.PI;
+    const [X,d]=ringExit(it.ang,EXN[it.man]||1), off=Math.asin(20/r)*180/Math.PI;
+    let ex=it.ang-d+off; if(ex>a0-3) ex=a0-3;
+    arc(r,a0,ex); out(X); return pts;
+  }
+  if(it.side==='in'){
+    const lx=laneX(it), f=toWorld(it.arm,lx,it.dist-k.hl-3), e=toWorld(it.arm,20,g.outer+4); P(f.x,f.y); P(e.x,e.y);
+    const r=laneR(ringLaneFor(it.man)), off=Math.asin(20/r)*180/Math.PI, s0=AANG[it.arm];
+    const [X,d]=ringExit(s0,EXN[it.man]||2);
+    arc(r,s0-off-8,s0-d+off); out(X); return pts;
+  }
+  const lx=laneX(it), a=toWorld(it.arm,-lx,it.dist+k.hl+3), b=toWorld(it.arm,-lx,Math.min(ARM_LEN[it.arm]-12,it.dist+k.hl+90));
+  if(Math.hypot(a.x-b.x,a.y-b.y)<25) return [];
+  P(a.x,a.y); P(b.x,b.y); return pts;
+}
+function ringArrow(it){
+  const pts=ringPts(it); if(pts.length<2) return '';
+  const col=arrowColor(it), d='M'+pts.map(p=>p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' L');
+  const a=pts[pts.length-2], b=pts[pts.length-1], len=Math.hypot(b.x-a.x,b.y-a.y)||1;
+  return `<path d="${d}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${d}" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${arrowHead(b.x,b.y,(b.x-a.x)/len,(b.y-a.y)/len,col)}`;
 }
 function signIcon(type,c,exp,small){
   if(type==='stop'){
@@ -569,6 +684,10 @@ const aR=c=>`<g transform="scale(-1 1)">${aL(c)}</g>`;
 const aU=c=>`<path d="M-4 8.5V-1a4 4 0 0 1 8 0V3" stroke="${c}" stroke-width="2.4" fill="none"/><polygon points="4,8.5 -0.3,2.5 8.3,2.5" fill="${c}"/>`;
 const aSR=c=>`<path d="M-2 8.5V-3" stroke="${c}" stroke-width="2.4" fill="none"/><polygon points="-2,-8.5 -6,-2.6 2,-2.6" fill="${c}"/><path d="M-2 5Q-2 1.5 1.5 1.5H4" stroke="${c}" stroke-width="2.4" fill="none"/><polygon points="9,1.5 3.6,-2.4 3.6,5.4" fill="${c}"/>`;
 const PEDS=(c=K)=>`<circle cx="0.6" cy="-4.2" r="1.7" fill="${c}"/><path d="M0.6 -2.2L-0.4 3M-0.4 3L-3.2 8M-0.4 3L2.6 8M0.2 -0.2L-3 1.6M0.2 -0.2L3.2 2" stroke="${c}" stroke-width="1.4" stroke-linecap="round" fill="none"/>`;
+const RA=(c,r,w)=>{ let s=''; for(let i=0;i<3;i++){ const a0=i*120+25, a1=a0+80, P=a=>[r*Math.cos(rad(a)),r*Math.sin(rad(a))];
+  const [x1,y1]=P(a1),[x0,y0]=P(a0), tx=Math.sin(rad(a0)), ty=-Math.cos(rad(a0)), nx=Math.cos(rad(a0)), ny=Math.sin(rad(a0)), h=w*1.6;
+  s+=`<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A${r} ${r} 0 0 0 ${x0.toFixed(2)} ${y0.toFixed(2)}" stroke="${c}" stroke-width="${w}" fill="none"/><polygon points="${(x0+tx*h*1.4).toFixed(2)},${(y0+ty*h*1.4).toFixed(2)} ${(x0+nx*h).toFixed(2)},${(y0+ny*h).toFixed(2)} ${(x0-nx*h).toFixed(2)},${(y0-ny*h).toFixed(2)}" fill="${c}"/>`; }
+  return s; };
 const XSIGN={
   i26:()=>TRI(`<path d="M-4.6 -1.6L4.6 7.6M4.6 -1.6L-4.6 7.6" stroke="${K}" stroke-width="2.3"/>`),
   i27:()=>TRI(`<path d="M0 -5V9.2" stroke="${K}" stroke-width="3.4"/><path d="M-6.5 3H6.5" stroke="${K}" stroke-width="1.6"/>`),
@@ -578,6 +697,7 @@ const XSIGN={
   iii6:()=>`<rect x="-12" y="-12" width="24" height="24" rx="2.5" fill="#1e63b8" stroke="#fff" stroke-width="1"/><polygon points="0,-10 10,8.5 -10,8.5" fill="#fff"/><g transform="translate(0 1.8) scale(.8)">${PEDS()}</g><path d="M-6 7.6H6" stroke="${K}" stroke-width="1" stroke-dasharray="1.6 1.1"/>`,
   ii26:()=>PROH(aL(K)), ii261:()=>PROH(aR(K)), ii27:()=>PROH(aU(K)),
   ii43s:()=>MAND(aS('#fff')), ii43l:()=>MAND(aL('#fff')), ii43r:()=>MAND(aR('#fff')),
+  ii452:()=>MAND(RA('#fff',6.6,2.3)), i30:()=>TRI(`<g transform="translate(0 2.6)">${RA(K,4.4,1.7)}</g>`),
   ii43sr:()=>MAND(aSR('#fff')), ii43sl:()=>MAND(`<g transform="scale(-1 1)">${aSR('#fff')}</g>`)
 };
 function prioPanel(a,pr){
@@ -597,6 +717,7 @@ function tree(x,y,r){
 
 function labelText(i,mode){ mode=mode||effLabels(); if(mode==='num') return String(i+1); let s='',n=i; do{ s=String.fromCharCode(65+n%26)+s; n=Math.floor(n/26)-1; }while(n>=0); return s; }
 
+function badgePos(it){ if(it.kind==='ped'){ const p=itemLocal(it); return toWorld(it.arm,p.x,p.y+20); } return frameToWorld(it,0,-(KINDS[it.kind].hl+13)); }
 function renderSVG(exp){
   const A=arms(), T=S.layout==='t', eu=S.markings==='eu';
   let s='';
@@ -606,6 +727,16 @@ function renderSVG(exp){
   s+=`<rect width="800" height="600" fill="#5f6168"/>`;
   // grass
   const G='#8bc34a', curb='stroke="#fff" stroke-width="3" fill="none"';
+  if(isRing()){
+    const g=ringGeo(), o=g.outer, h=Math.sqrt(o*o-1600);
+    s+=`<rect width="800" height="600" fill="${G}"/><circle cx="400" cy="300" r="${o}" fill="#5f6168" stroke="#fff" stroke-width="3"/>`;
+    s+=`<rect x="360" y="0" width="80" height="600" fill="#5f6168"/><rect x="0" y="260" width="800" height="80" fill="#5f6168"/>`;
+    s+=`<path d="M360 0V${300-h}M440 0V${300-h}M360 600V${300+h}M440 600V${300+h}M0 260H${400-h}M0 340H${400-h}M800 260H${400+h}M800 340H${400+h}" ${curb}/>`;
+    s+=`<circle cx="400" cy="300" r="${o-1.5}" fill="#5f6168"/>`;
+    for(let j=1;j<g.lanes;j++) s+=`<circle cx="400" cy="300" r="${g.r0+g.lw*j}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="12 10"/>`;
+    s+=`<circle cx="400" cy="300" r="${g.r0+5}" fill="#8a8c93"/><circle cx="400" cy="300" r="${g.r0}" fill="${G}" stroke="#fff" stroke-width="3"/>${tree(400,300,Math.min(22,g.r0*.45))}`;
+    s+=[...TREES.tl,...TREES.tr,...TREES.bl,...TREES.br].filter(([x,y,r])=>Math.hypot(x-400,y-300)>o+r+6).map(([x,y,r])=>tree(x,y,r)).join('');
+  } else {
   if(T){ s+=`<rect x="0" y="0" width="800" height="260" fill="${G}"/><path d="M0 260H800" ${curb}/>`; }
   else{
     s+=`<path d="M0 0H360V240A20 20 0 0 1 340 260H0Z" fill="${G}"/><path d="M800 0H440V240A20 20 0 0 0 460 260H800Z" fill="${G}"/>`;
@@ -615,38 +746,40 @@ function renderSVG(exp){
   s+=`<path d="M0 340H340A20 20 0 0 1 360 360V600" ${curb}/><path d="M800 340H460A20 20 0 0 0 440 360V600" ${curb}/>`;
   const tr = T ? [...TREES.top,...TREES.bl,...TREES.br] : [...TREES.tl,...TREES.tr,...TREES.bl,...TREES.br];
   s+=tr.map(([x,y,r])=>tree(x,y,r)).join('');
+  }
   // arm markings
   for(const arm of A){
     const len=ARM_LEN[arm];
-    s+=`<g transform="translate(400 300) rotate(${ARM_DEG[arm]})">`;
+    s+=`<g transform="translate(400 300) rotate(${ARM_DEG[arm]}) translate(0 ${OF()})">`;
     if(eu){ s+=`<path d="M0 66V140" stroke="#fff" stroke-width="3"/><path d="M0 158V${len}" stroke="#fff" stroke-width="3" stroke-dasharray="20 14"/>`; }
     else  { s+=`<path d="M-3 66V${len}M3 66V${len}" stroke="#f2c230" stroke-width="2.4"/>`; }
     s+=`<path d="M37 62V${len}M-37 62V${len}" stroke="rgba(255,255,255,.55)" stroke-width="1.6"/>`;
-    s+=`<rect x="1" y="63" width="37" height="5" fill="#fff"/>`;
+    if(isRing() && S.ctl[arm].t!=='stop'){ for(let i=0;i<5;i++) s+=`<rect x="${2+i*7.6}" y="63" width="4.6" height="5" fill="#fff"/>`; }
+    else s+=`<rect x="1" y="63" width="37" height="5" fill="#fff"/>`;
     if(eu){ for(let i=0;i<7;i++) s+=`<rect x="${-35+i*10.3}" y="43" width="6" height="16" fill="#fff"/>`; }
     else  { s+=`<path d="M-38 44H38M-38 59H38" stroke="#fff" stroke-width="2.4"/>`; for(let i=0;i<7;i++) s+=`<rect x="${-35+i*10.3}" y="47" width="6" height="9" fill="rgba(255,255,255,.35)"/>`; }
     s+=`</g>`;
   }
   // items: arrows first, then sprites
-  const items=S.items.filter(it=>A.includes(it.arm));
+  const items=S.items.filter(onBoard);
   for(const it of items){
     if(!it.arrow) continue;
-    s+=`<g transform="translate(400 300) rotate(${ARM_DEG[it.arm]})" pointer-events="none">${pathFor(it)}</g>`;
+    if(isRing() && it.kind!=='ped') s+=`<g pointer-events="none">${ringArrow(it)}</g>`;
+    else s+=`<g transform="translate(400 300) rotate(${ARM_DEG[it.arm]})" pointer-events="none">${pathFor(it)}</g>`;
   }
   for(const it of items){
-    const p=itemLocal(it), k=KINDS[it.kind];
+    const wp=itemWorld(it), k=KINDS[it.kind];
     const sel = !exp && selected && selected.type==='item' && selected.id===it.id;
-    s+=`<g transform="translate(400 300) rotate(${ARM_DEG[it.arm]}) translate(${p.x} ${p.y}) rotate(${p.ang})" data-id="${it.id}">`;
+    s+=`<g transform="translate(${wp.x.toFixed(1)} ${wp.y.toFixed(1)}) rotate(${wp.ang.toFixed(1)})" data-id="${it.id}">`;
     s+=`<rect x="${-k.w/2-6}" y="${-k.hl-6}" width="${k.w+12}" height="${k.hl*2+12}" fill="transparent"/>`;
     s+=`<g transform="translate(1.5 2)" opacity=".22">${`<rect x="${-k.w/2}" y="${-k.hl}" width="${k.w}" height="${k.hl*2}" rx="5" fill="#000"/>`}</g>`;
-    s+=sprite(it.kind,it.color,{exp,lights:it.lights});
-    s+=signalLights(it,exp);
+    s+=`<g transform="scale(${SC})">${sprite(it.kind,it.color,{exp,lights:it.lights})}${signalLights(it,exp)}</g>`;
     if(sel) s+=`<rect x="${-k.w/2-4}" y="${-k.hl-4}" width="${k.w+8}" height="${k.hl*2+8}" rx="7" fill="none" stroke="#fff" stroke-width="2"/><rect x="${-k.w/2-6}" y="${-k.hl-6}" width="${k.w+12}" height="${k.hl*2+12}" rx="9" fill="none" stroke="#0f5c63" stroke-width="1.6"/>`;
     s+=`</g>`;
   }
   // controls
   for(const arm of A){
-    const c=S.ctl[arm], w=toWorld(arm,64,78);
+    const c=S.ctl[arm], w=toWorld(arm,64,78+OF());
     const sel = !exp && selected && selected.type==='slot' && selected.arm===arm;
     const hasPanel = hasPanelOn(arm);
     const ic=signIcon(c.t,c.c,exp);
@@ -655,16 +788,16 @@ function renderSVG(exp){
       s+=`<g transform="translate(${w.x.toFixed(1)} ${w.y.toFixed(1)})" data-slot="${arm}">${sel?`<rect x="-17" y="-23" width="34" height="46" rx="7" fill="rgba(255,255,255,.35)" stroke="#0f5c63" stroke-width="1.6"/>`:''}${inner}</g>`;
     }
     (c.x||[]).forEach((code,i)=>{
-      const p=toWorld(arm,64,78+34+29*i);
+      const p=toWorld(arm,64,78+OF()+34+29*i);
       s+=`<g transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) scale(.92)" data-slot="${arm}">${signIcon(code)}</g>`;
     });
   }
   // labels
   if(effLabels(exp)!=='none'){
     items.forEach((it,i)=>{
-      const p=itemLocal(it); let lx=p.x, ly=p.y;
-      if(it.kind==='ped') ly-=20; else lx += (it.side==='in'?1:-1)*(KINDS[it.kind].w/2+15);
-      const w=toWorld(it.arm,lx,ly), txt=labelText(i);
+      let w;
+      if(it.kind==='ped'){ const p=itemLocal(it); w=toWorld(it.arm,p.x,p.y-20); } else w=frameToWorld(it,KINDS[it.kind].w/2+15,0);
+      const txt=labelText(i);
       s+=`<g transform="translate(${w.x.toFixed(1)} ${w.y.toFixed(1)})" pointer-events="none"><circle r="11" fill="#fff" stroke="#1f2a30" stroke-width="2"/><text y="4.3" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="${txt.length>1?10:12.5}" fill="#1f2a30">${txt}</text></g>`;
     });
   }
@@ -672,9 +805,7 @@ function renderSVG(exp){
     const us={}; prop.steps.forEach((w,i)=>w.forEach(id=>us[id]=i+1));
     items.forEach(it=>{
       const n=us[it.id]; if(!n) return;
-      const p=itemLocal(it); let lx=p.x, ly=p.y;
-      if(it.kind==='ped') ly+=20; else ly += (it.side==='in'?-1:1)*(KINDS[it.kind].hl+13);
-      const w=toWorld(it.arm,lx,ly), st=prop.res && prop.res.status[it.id];
+      const w=badgePos(it), st=prop.res && prop.res.status[it.id];
       const col= st==='bad' ? '#c0392b' : st==='good' ? '#1e8e3e' : '#b35900';
       s+=`<g transform="translate(${w.x.toFixed(1)} ${w.y.toFixed(1)})" pointer-events="none"><circle r="11.5" fill="${col}" stroke="#fff" stroke-width="2"/><text y="4.6" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="12.5" fill="#fff">${n}</text></g>`;
     });
@@ -682,9 +813,7 @@ function renderSVG(exp){
   if(solOpen && !exp && sol && sol.stepOf){
     items.forEach(it=>{
       const n=sol.stepOf[it.id]; if(!n) return;
-      const p=itemLocal(it); let lx=p.x, ly=p.y;
-      if(it.kind==='ped') ly+=20; else ly += (it.side==='in'?-1:1)*(KINDS[it.kind].hl+13);
-      const w=toWorld(it.arm,lx,ly);
+      const w=badgePos(it);
       s+=`<g transform="translate(${w.x.toFixed(1)} ${w.y.toFixed(1)})" pointer-events="none"><rect x="-11" y="-11" width="22" height="22" rx="6" fill="${n==='w'?'#b04a00':'#0f5c63'}" stroke="#fff" stroke-width="2"/><text y="4.6" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="12.5" fill="#fff">${n==='w'?'…':n}</text></g>`;
     });
   }
@@ -705,6 +834,8 @@ function render(){
   document.getElementById('undo').disabled=!undoStack.length;
   document.getElementById('redo').disabled=!redoStack.length;
   document.querySelectorAll('#layoutSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.layout));
+  const rl=document.getElementById('rlanes'); rl.hidden=!isRing(); rl.value=String(S.rlanes||2);
+  document.querySelectorAll('#preset option').forEach(o=>{ o.hidden = isRing() ? ['twostop','priority'].includes(o.value) : o.value==='ring'; });
   document.getElementById('preset').value=S.preset;
   const pd=document.getElementById('prioDir');
   pd.hidden = !S.prio;
@@ -746,7 +877,7 @@ function startNewDrag(e,kind){
   e.preventDefault(); closeMenus();
   const g=document.createElement('div'); g.className='ghost';
   const sc=board.getBoundingClientRect().width/800;
-  g.innerHTML=`<svg viewBox="-30 -40 60 80" style="width:${60*sc*1.0}px;height:${80*sc}px;overflow:visible"><g>${sprite(kind,kind==='ped'?'#7e57c2':COLORS[0],{exp:true})}</g></svg>`;
+  g.innerHTML=`<svg viewBox="-30 -40 60 80" style="width:${60*sc}px;height:${80*sc}px;overflow:visible"><g transform="scale(${SC})">${sprite(kind,kind==='ped'?'#7e57c2':COLORS[0],{exp:true})}</g></svg>`;
   g.style.width=60*sc+'px'; g.style.height=80*sc+'px'; g.style.margin=`${-40*sc}px 0 0 ${-30*sc}px`;
   document.body.appendChild(g);
   drag={type:'new',kind,ghost:g};
@@ -800,6 +931,7 @@ function newItem(kind){
     signal:'auto', arrow:true, lights:EMERGENCY.has(kind)};
 }
 function placeItem(it,sn){
+  if(sn.ring){ it.arm='o'; it.side='r'; it.lane=sn.lane; it.ang=sn.ang; if(!EXN[it.man]) it.man='right'; return; }
   it.arm=sn.arm;
   if(it.kind==='ped'){ it.end=sn.end; return; }
   it.side=sn.side; it.dist=sn.dist;
@@ -821,9 +953,11 @@ function renderPop(){
   let html='', anchor;
   if(selected.type==='item'){
     const it=S.items.find(i=>i.id===selected.id); if(!it){ selected=null; return; }
-    const p=itemLocal(it); anchor=toWorld(it.arm,p.x,p.y);
+    anchor=itemWorld(it);
     if(it.kind==='ped'){
       html+=`<h4>${t('maneuver')}</h4><div class="row">${['cross','wait'].map(m=>`<button class="btn ${it.man===m?'on':''}" data-a="man" data-v="${m}">${t(m==='cross'?'crossing':'waiting')}</button>`).join('')}</div>`;
+    } else if(isRing() && (it.side==='in' || it.arm==='o')){
+      html+=`<h4>${t('maneuver')}</h4><div class="row">${['right','straight','left','uturn'].map(m=>`<button class="btn ${it.man===m?'on':''}" data-a="man" data-v="${m}">${t('ex'+EXN[m])}</button>`).join('')}</div>`;
     } else if(it.side==='in'){
       html+=`<h4>${t('maneuver')}</h4><div class="row">${['left','straight','right','uturn'].map(m=>`<button class="btn ic ${it.man===m?'on':''}" data-a="man" data-v="${m}" title="${t(m)}" ${maneuverOK(it.arm,m)?'':'disabled style="opacity:.3"'}>${ico(m)}</button>`).join('')}</div>`;
     }
@@ -884,6 +1018,7 @@ function onPopClick(e){
 function presetCtl(p){
   const o={}; const A=['s','w','n','e'];
   for(const a of A) o[a]={t:'none',c:'g',panel:false,x:((S.ctl[a]||{}).x||[]).slice()};
+  if(p==='ring'){ A.forEach(a=>{ o[a].t='yield'; if(!o[a].x.includes('ii452')) o[a].x=EXTRAS.filter(k=>k==='ii452'||o[a].x.includes(k)); }); }
   if(p==='priority'){ const pr=S.prio||defaultPrio(), bend=!isStraightPair(pr); A.forEach(a=>{ o[a].t = pr.includes(a)?'prio':'yield'; o[a].panel=bend; }); }
   if(p==='allstop') A.forEach(a=>o[a].t='stop');
   if(p==='twostop'){ if(S.layout==='t') o.s.t='stop'; else { o.w.t='stop'; o.e.t='stop'; } }
@@ -891,7 +1026,7 @@ function presetCtl(p){
   return o;
 }
 function detectPreset(){
-  for(const p of (S.prio?['priority']:[]).concat(['allstop','twostop','signals','none'])){
+  for(const p of (isRing()?['ring']:[]).concat(S.prio?['priority']:[]).concat(['allstop','twostop','signals','none'])){
     const o=presetCtl(p);
     if(arms().every(a=>o[a].t===S.ctl[a].t && (o[a].t!=='light' || o[a].c===S.ctl[a].c))) return p;
   }
@@ -901,7 +1036,7 @@ function detectPreset(){
 // ===================== encode / decode (for share links) =====================
 const CTL_CODE={none:'0',stop:'s',yield:'y',prio:'p',prioEnd:'q'};
 function encode(){
-  let h='d'+S.layout+(S.markings==='eu'?'e':'u')+({none:'n',num:'1',let:'a'}[S.labels]);
+  let h='d'+(isRing()?(S.rlanes===3?'q':'r'):S.layout)+(S.markings==='eu'?'e':'u')+({none:'n',num:'1',let:'a'}[S.labels]);
   for(const a of ['s','w','n','e']){ const c=S.ctl[a]; h+= c.t==='light' ? (c.c==='y'?'a':c.c) : CTL_CODE[c.t]; }
   const parts=[h];
   const anyX=['s','w','n','e'].some(a=>S.ctl[a].panel||(S.ctl[a].x||[]).length);
@@ -913,7 +1048,7 @@ function encode(){
   for(const it of S.items){
     const ci=Math.max(0,COLORS.indexOf(it.color));
     const pedCol=['#7e57c2','#e5552e','#16a085','#f39c12'].indexOf(it.color);
-    parts.push(KINDS[it.kind].code+it.arm+(it.kind==='ped'?(it.end>0?'p':'m'):(it.side==='in'?'i':'o'))+String(it.dist||0).padStart(3,'0')
+    parts.push(KINDS[it.kind].code+it.arm+(it.kind==='ped'?(it.end>0?'p':'m'):it.arm==='o'?String(it.lane):(it.side==='in'?'i':'o'))+String((it.arm==='o'?it.ang:it.dist)||0).padStart(3,'0')
       +({left:'l',straight:'s',right:'r',uturn:'u',cross:'c',wait:'w'}[it.man])
       +(it.kind==='ped' && pedCol>=0 ? String.fromCharCode(97+pedCol) : String(ci))
       +({auto:'a',none:'n',left:'l',right:'r',hazards:'h'}[it.signal])+(it.arrow?'1':'0')+(it.lights?'1':'0'));
@@ -924,7 +1059,7 @@ function decode(str){
   const parts=str.split('-'), h=parts[0];
   if(!h || h[0]!=='d' || h.length<8) return null;
   const st=freshState();
-  st.layout=h[1]==='t'?'t':'4'; st.markings=h[2]==='u'?'us':'eu'; st.labels={n:'none','1':'num',a:'let'}[h[3]]||'none';
+  st.layout=h[1]==='t'?'t':(h[1]==='r'||h[1]==='q')?'r':'4'; st.rlanes=h[1]==='q'?3:2; st.markings=h[2]==='u'?'us':'eu'; st.labels={n:'none','1':'num',a:'let'}[h[3]]||'none';
   ['s','w','n','e'].forEach((a,i)=>{ const ch=h[4+i]; st.ctl[a]= 'rag'.includes(ch)?{t:'light',c:(ch==='a'?'y':ch),panel:false,x:[]}:{t:{'0':'none',s:'stop',y:'yield',p:'prio',q:'prioEnd'}[ch]||'none',c:'g',panel:false,x:[]}; });
   for(const p of parts.slice(1)){
     if(p[0]==='x' && p.length>=23){
@@ -938,7 +1073,8 @@ function decode(str){
       man:{l:'left',s:'straight',r:'right',u:'uturn',c:'cross',w:'wait'}[p[6]]||'straight',
       color: /[a-d]/.test(p[7]) ? ['#7e57c2','#e5552e','#16a085','#f39c12'][p.charCodeAt(7)-97] : COLORS[+p[7]]||COLORS[0],
       signal:{a:'auto',n:'none',l:'left',r:'right',h:'hazards'}[p[8]]||'auto',arrow:p[9]!=='0',lights:p[10]==='1'};
-    if(!ARM_DEG.hasOwnProperty(it.arm)) continue;
+    if(it.arm==='o'){ it.lane=+p[2]||0; it.ang=+p.slice(3,6)||0; it.side='r'; }
+    else if(!ARM_DEG.hasOwnProperty(it.arm)) continue;
     st.items.push(it);
   }
   const keep=S; S=st; st.preset=detectPreset(); S=keep;
@@ -1025,7 +1161,7 @@ function movePts(v){
   const pts=[], push=(x,y)=>pts.push(toWorld(v.arm,x,y)), L=20;
   const seg=(x1,y1,x2,y2,n)=>{ for(let i=0;i<=n;i++) push(x1+(x2-x1)*i/n, y1+(y2-y1)*i/n); };
   const quad=(x0,y0,cx,cy,x1,y1,n)=>{ for(let i=0;i<=n;i++){ const t=i/n,u=1-t; push(u*u*x0+2*u*t*cx+t*t*x1, u*u*y0+2*u*t*cy+t*t*y1); } };
-  if(v.kind==='ped'){ seg(v.end*44,52,-v.end*44,52,30); return pts; }
+  if(v.kind==='ped'){ const py=52+OF(); seg(v.end*44,py,-v.end*44,py,30); return pts; }
   const m=v.man;
   if(m==='straight') seg(L,64,L,-64,42);
   else if(m==='right'){ seg(L,64,L,46,6); quad(L,46,L,L,46,L,12); seg(46,L,64,L,6); }
@@ -1033,7 +1169,41 @@ function movePts(v){
   else { seg(L,64,L,30,10); for(let i=0;i<=20;i++){ const a=Math.PI*i/20; push(L*Math.cos(a),30-L*Math.sin(a)); } seg(-L,30,-L,64,10); }
   return pts;
 }
+function ringSpan(v){
+  if(v.arm==='o'){ const [X,d]=ringExit(v.ang,EXN[v.man]||1); return {start:v.ang,total:d,exit:X,lane:v.lane}; }
+  const s0=AANG[v.arm], [X,d]=ringExit(s0,EXN[v.man]||2); return {start:s0,total:d,exit:X,lane:ringLaneFor(v.man),enter:v.arm};
+}
+const ringPasses=(sp,ang)=>{ const d=((sp.start-ang)%360+360)%360; return d>2 && d<sp.total-2; };
+function ringConflict(A,B){
+  if(A.kind==='ped' && B.kind==='ped') return false;
+  if(A.kind==='ped'||B.kind==='ped'){ const P=A.kind==='ped'?A:B, V=A.kind==='ped'?B:A, sp=ringSpan(V); return sp.enter===P.arm || sp.exit===P.arm; }
+  const a=ringSpan(A), b=ringSpan(B);
+  if(a.enter && b.enter){ if(A.arm===B.arm) return false; return ringPasses(a,AANG[B.arm]) || ringPasses(b,AANG[A.arm]) || a.exit===b.exit; }
+  if(a.enter && !b.enter) return ringPasses(b,AANG[A.arm]);
+  if(!a.enter && b.enter) return ringPasses(a,AANG[B.arm]);
+  if(A.lane===B.lane){ const d1=((A.ang-B.ang)%360+360)%360, d2=((B.ang-A.ang)%360+360)%360; return (d1>0&&d1<100)||(d2>0&&d2<100); }
+  const inn=A.lane>B.lane?A:B, out=inn===A?B:A, si=ringSpan(inn), so=ringSpan(out);
+  return ringPasses(so,AANG[si.exit]) || so.exit===si.exit;
+}
+function ringYield(A,B){
+  if(isEm(B) && !isEm(A)) return 'r_emerg';
+  if(isEm(A) && !isEm(B)) return null;
+  if(B.kind==='ped'){ if(A.kind==='ped') return null; return pedGreen(B.arm)===null ? 'r_ped' : 'r_pedTurn'; }
+  if(A.kind==='ped') return null;
+  const a=ringSpan(A), b=ringSpan(B), signed=x=>['yield','stop'].includes(S.ctl[x].t);
+  if(a.enter && !b.enter) return signed(A.arm) ? 'r_ringIn' : null;
+  if(!a.enter && b.enter) return signed(B.arm) ? null : 'r_ringNoSign';
+  if(a.enter && b.enter){
+    const pa=ringPasses(a,AANG[B.arm]), pb=ringPasses(b,AANG[A.arm]);
+    if(pa && !pb) return relDeg(A,B)===270 ? 'r_right' : 'r_ringAhead';
+    if(pb && !pa) return null;
+    return relDeg(A,B)===270 ? 'r_right' : null;
+  }
+  if(A.lane===B.lane){ const d=((A.ang-B.ang)%360+360)%360; return (d>0&&d<100) ? 'r_queue' : null; }
+  return A.lane>B.lane ? 'r_ringLane' : null;
+}
 function conflict(A,B){
+  if(isRing()) return ringConflict(A,B);
   if(A.kind==='ped' && B.kind==='ped') return false;
   if(A.kind!=='ped' && B.kind!=='ped'){
     if(A.arm===B.arm) return false;
@@ -1052,6 +1222,7 @@ function virt(v,pr){
   return off<offM ? 'left' : 'right';
 }
 function mustYield(A,B,ctx){
+  if(isRing()) return ringYield(A,B);
   if(isEm(B) && !isEm(A)) return 'r_emerg';
   if(isEm(A) && !isEm(B)) return null;
   if(B.kind==='ped'){ if(A.kind==='ped') return null; return pedGreen(B.arm)===null ? 'r_ped' : 'r_pedTurn'; }
@@ -1077,13 +1248,13 @@ function mustYield(A,B,ctx){
 }
 const FORBID={left:['ii26','ii43s','ii43r','ii43sr'],right:['ii261','ii43s','ii43l','ii43sl'],straight:['ii43l','ii43r'],uturn:['ii27','ii43s','ii43l','ii43r','ii43sr','ii43sl']};
 function solve(){
-  const all=S.items.filter(it=>arms().includes(it.arm));
+  const all=S.items.filter(onBoard);
   const lab={}; all.forEach((it,i)=>lab[it.id]=labelText(i,'let'));
   const ctx=levelInfo();
   const P=[], excluded=[];
   for(const it of all){
     if(it.kind==='ped'){ if(it.man==='cross') P.push(it); else excluded.push([it,'n_pedWait']); }
-    else if(it.side==='in' && maneuverOK(it.arm,it.man)) P.push(it); else excluded.push([it,'n_out']);
+    else if(it.arm==='o' || (it.side==='in' && maneuverOK(it.arm,it.man))) P.push(it); else excluded.push([it,'n_out']);
   }
   const act=P.filter(inPhase), waiting=P.filter(v=>!inPhase(v));
   const pred={}; act.forEach(v=>pred[v.id]=[]);
@@ -1109,19 +1280,22 @@ function solve(){
     steps.push(wave); wave.forEach(v=>done.add(v.id)); rest=rest.filter(v=>!done.has(v.id));
   }
   const stepOf={}; steps.forEach((w,i)=>w.forEach(v=>stepOf[v.id]=i+1)); waiting.forEach(v=>stepOf[v.id]='w');
-  let reg = arms().some(armLight) ? 'reg_light' : ctx.hasLevels ? 'reg_signs' : ctx.allMinor ? 'reg_all' : 'reg_none';
+  let reg = isRing() ? (arms().some(a=>['yield','stop'].includes(S.ctl[a].t)) ? 'reg_ring' : 'reg_ringNone') : arms().some(armLight) ? 'reg_light' : ctx.hasLevels ? 'reg_signs' : ctx.allMinor ? 'reg_all' : 'reg_none';
   return {steps,waiting,excluded,pred,lab,ctx,stepOf,reg,dead,count:P.length};
 }
 function who(v,lab){
   const k=t(v.kind);
   if(v.kind==='ped') return `${lab[v.id]} – ${k}, ${t('appr_'+v.arm)}, ${t('crossing').toLowerCase()}`;
+  if(v.arm==='o'){ const ln = v.lane===0 ? t('lane0') : (v.lane===ringGeo().lanes-1 ? t('lane2') : t('lane1')); return `${lab[v.id]} – ${k}, ${t('inRing')} (${ln}), ${t('ex'+EXN[v.man])}`; }
+  if(isRing()) return `${lab[v.id]} – ${k}, ${t('appr_'+v.arm)}, ${t('ex'+EXN[v.man])}`;
   return `${lab[v.id]} – ${k}, ${t('appr_'+v.arm)}, ${t(v.man).toLowerCase()}`;
 }
 function notesFor(v,R,active){
   const out=[];
   if(EMERGENCY.has(v.kind) && !v.lights && v.kind!=='ped') out.push(t('n_noLights'));
+  if(v.arm==='o') return out;
   if(v.kind!=='ped' && S.ctl[v.arm].t==='stop') out.push(t('n_stopS'));
-  if(v.kind!=='ped'){ const f=(FORBID[v.man]||[]).find(x=>(S.ctl[v.arm].x||[]).includes(x)); if(f) out.push(`<span class="warn">${t('n_forb').replace('{s}',t('n_'+f))}</span>`); }
+  if(v.kind!=='ped' && !isRing()){ const f=(FORBID[v.man]||[]).find(x=>(S.ctl[v.arm].x||[]).includes(x)); if(f) out.push(`<span class="warn">${t('n_forb').replace('{s}',t('n_'+f))}</span>`); }
   return out;
 }
 function renderSolution(){
@@ -1143,7 +1317,8 @@ function renderSolution(){
         if(isEm(v)) li.push(t('p_emerg'));
         else if(v.kind==='ped') li.push(t('p_ped'));
         else if(armLight(v.arm)==='g') li.push(t('p_green'));
-        else if(R.ctx.hasLevels && R.ctx.lv[v.arm]===1) li.push(t('p_main'));
+        else if(v.arm==='o') li.push(t('p_ring'));
+        else if(!isRing() && R.ctx.hasLevels && R.ctx.lv[v.arm]===1) li.push(t('p_main'));
       }
       notesFor(v).forEach(n=>li.push(n));
       h+=`<div class="ent"><div class="who">${who(v,R.lab)}</div><ul>${li.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
@@ -1188,7 +1363,7 @@ function checkProp(){
 }
 function renderProp(){
   const body=document.getElementById('propBody'); if(!body) return;
-  const all=S.items.filter(it=>arms().includes(it.arm)); const lab={}; all.forEach((it,i)=>lab[it.id]=labelText(i,'let'));
+  const all=S.items.filter(onBoard); const lab={}; all.forEach((it,i)=>lab[it.id]=labelText(i,'let'));
   prop.steps=prop.steps.map(w=>w.filter(id=>lab[id])).filter(w=>w.length);
   let h=`<div class="reg">${t('propHelp')}</div>`;
   if(!all.length){ body.innerHTML=h+`<p>${t('noUsers')}</p>`; return; }
@@ -1231,7 +1406,10 @@ function closeMenus(){ document.getElementById('dlMenu').hidden=true; }
 
 document.querySelectorAll('#layoutSeg button').forEach(b=>b.addEventListener('click',()=>{
   if(S.layout===b.dataset.v) return;
-  snapshot(); S.layout=b.dataset.v; S.items=S.items.filter(i=>arms().includes(i.arm));
+  const wasRing=isRing();
+  snapshot(); S.layout=b.dataset.v; S.items=S.items.filter(onBoard);
+  if(isRing()){ S.rlanes=S.rlanes||2; S.prio=null; S.preset='ring'; S.items=S.items.filter(i=>i.kind==='ped'||i.arm==='o'||i.side!=='in'||i.dist>=OF()+70+KINDS[i.kind].hl); }
+  else if(wasRing){ if(S.preset==='ring') S.preset='none'; S.ctl=presetCtl(S.preset); S.ctl=Object.fromEntries(Object.entries(S.ctl).map(([a,c])=>[a,Object.assign(c,{x:c.x.filter(k=>k!=='ii452')})])); }
   if(S.prio && !PRIO_PAIRS[S.layout].includes(S.prio)) S.prio=defaultPrio();
   S.items.forEach(it=>{ if(it.kind!=='ped'&&it.side==='in'&&!maneuverOK(it.arm,it.man)) it.man=['straight','right','left','uturn'].find(m=>maneuverOK(it.arm,m)); });
   if(S.preset!=='custom') S.ctl=presetCtl(S.preset); else S.preset=detectPreset();
@@ -1239,6 +1417,7 @@ document.querySelectorAll('#layoutSeg button').forEach(b=>b.addEventListener('cl
 }));
 document.getElementById('preset').addEventListener('change',e=>{ snapshot(); S.preset=e.target.value; S.prio = S.preset==='priority' ? (S.prio||defaultPrio()) : null; S.ctl=presetCtl(S.preset); commit(); });
 document.getElementById('prioDir').addEventListener('change',e=>{ snapshot(); S.prio=e.target.value; S.preset='priority'; S.ctl=presetCtl('priority'); commit(); });
+document.getElementById('rlanes').addEventListener('change',e=>{ snapshot(); S.rlanes=+e.target.value; S.items.forEach(i=>{ if(i.arm==='o') i.lane=Math.min(i.lane,S.rlanes-1); }); S.items=S.items.filter(i=>i.kind==='ped'||i.arm==='o'||i.side!=='in'||i.dist>=OF()+70+KINDS[i.kind].hl); commit(); });
 document.getElementById('markings').addEventListener('change',e=>{ snapshot(); S.markings=e.target.value; commit(); });
 document.getElementById('labels').addEventListener('change',e=>{ snapshot(); S.labels=e.target.value; commit(); });
 document.getElementById('lang').addEventListener('change',e=>{ lang=e.target.value; try{localStorage.setItem('dd_lang',lang);}catch(_){} applyI18n(); });
